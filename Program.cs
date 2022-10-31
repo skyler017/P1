@@ -4,12 +4,14 @@ namespace ERS
 {
     class Program
     {
+        private enum Bookmark { STARTUP, WELCOME
+            ,LOGIN_E,LOGIN_P,LOGIN_EM,LOGIN_PM
+            ,SIGN_E,SIGN_EA,SIGN_P,SIGN_EM,SIGN_EAM,SIGN_PM
+            }
+
         static void Main(string[] args)
         {
-            enum Bookmark {STARTUP,WELCOME...
-                    ,LOGIN_E,LOGIN_P,LOGIN_EM,LOGIN_PM...
-                    ,SIGN_E,SIGN_EA,SIGN_P,SIGN_EM,SIGN_EAM,SIGN_PM...
-                    }
+
             Console.WriteLine("Welcome to ERS Ticketing");
             Console.WriteLine("Please make a selection (type the corresponding # and press 'enter'");
             Console.WriteLine("1.Login \n2.Sign-up");
