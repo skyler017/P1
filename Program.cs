@@ -1,4 +1,5 @@
 ﻿using System;
+using System.IO;
 using UserAccess;
 
 namespace ERS
@@ -9,7 +10,7 @@ namespace ERS
             ,LOGIN_E,LOGIN_P//,LOGIN_EM,LOGIN_PM
             ,SIGN_E,SIGN_EA,SIGN_P//,SIGN_EM,SIGN_EAM,SIGN_PM
             }
-        private enum Cmd { NIL=-1
+        private enum CMD { NIL=-1
                 //, OPT0, OPT1, OPT2 /**/, OPT9
                 , PASS, FAIL, RETRY
         };
@@ -20,7 +21,7 @@ namespace ERS
         public void StateMachine()
         {
             Page Bookmark = Page.STARTUP;
-            Cmd Orders = Cmd.NIL;
+            CMD Orders = CMD.NIL;
             string userInputMessage;
             int userInput = -1;
             User Dave;
@@ -70,12 +71,12 @@ namespace ERS
                             Orders = checkForEmail(userInputMessage);
                             switch (Orders)
                             {
-                                case Cmd.PASS: // email found
-                                    Orders = Cmd.NIL;
+                                case CMD.PASS: // email found
+                                    Orders = CMD.NIL;
                                     Bookmark = Page.SIGN_P;
                                     break;
-                                case Cmd.FAIL: // not in system or was input wrong
-                                    Orders = Cmd.NIL;
+                                case CMD.FAIL: // not in system or was input wrong
+                                    Orders = CMD.NIL;
                                     //Bookmark = Page.SIGN_EM;
                                     continue;
                                     break;
@@ -106,19 +107,52 @@ namespace ERS
             }
         }
 
-        private Cmd checkForEmail(string input)
+        private bool CheckForExistingUser(string path, string email)
+        {
+            if(email != null)
+            {
+                return true;
+            }
+            return false;
+        }
+
+        private CMD CreateLoginCredentials(string path, string email, string password)
+        {
+            // check user does not already exist
+            if (CheckForExistingUser(path, email)) return CMD.FAIL;
+
+            // check email format
+            if (email == null) return CMD.RETRY;
+
+            // create user
+            
+        }
+
+        private CMD ConfirmLoginCredentials(string path, string email, string password)
+        {
+            if (email == "@2") // check email
+            {
+                if (password == "@2") // check password
+                {
+                    return CMD.PASS; // pair accepted
+                }
+            }
+            return CMD.FAIL;
+        }
+
+        private CMD checkForEmail(string input)
         {
             if (input[0] == '@')
             {
                 if (input == "@2")
                 {
-                    Console.WriteLine("And next..."); return Cmd.PASS;
+                    Console.WriteLine("And next..."); return CMD.PASS;
                     // now to check pass
                 }
                 else
                 {
                     // email not found
-                    Console.WriteLine("We couldn't find your email in our system"); return Cmd.FAIL;
+                    Console.WriteLine("We couldn't find your email in our system"); return CMD.FAIL;
                     // maybe they typed it wrong or they still need to put it in the system
                     //Bookmark = Page.SIGN_EM;                }
                 }
@@ -129,7 +163,7 @@ namespace ERS
 
                 Console.WriteLine("Unrecognized text input. Please use your full name@demo.com email");
                 //return Cmd.RETRY;
-                return Cmd.FAIL;
+                return CMD.FAIL;
             }
         }
 
