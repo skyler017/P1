@@ -1,6 +1,6 @@
 ﻿using System;
 using System.IO;
-using UserAccess;
+using Userzone;
 
 namespace ERS
 {
@@ -12,7 +12,7 @@ namespace ERS
             }
         private enum CMD { NIL=-1
                 //, OPT0, OPT1, OPT2 /**/, OPT9
-                , PASS, FAIL, RETRY
+                , FORW, BACK, FAIL, RETRY
         };
 
         const string Path = "./.LocalUserList";
@@ -25,6 +25,8 @@ namespace ERS
             string userInputMessage;
             int userInput = -1;
             User Dave;
+            string GivenUsername = "";
+            string GivenPassword = "";
 
             
             while (1 == 1)
@@ -68,10 +70,10 @@ namespace ERS
                         {
                             // check that the input string is in the correct format xxx@revature.com/net
                             // compare input to working emails
-                            Orders = checkForEmail(userInputMessage);
+                            Orders = checkForEmail(userInputMessage, GivenUsername);
                             switch (Orders)
                             {
-                                case CMD.PASS: // email found
+                                case CMD.FORW: // email found
                                     Orders = CMD.NIL;
                                     Bookmark = Page.SIGN_P;
                                     break;
@@ -122,8 +124,8 @@ namespace ERS
             if (CheckForExistingUser(path, email)) return CMD.FAIL;
 
             // check email format
-            if (email == null) return CMD.RETRY;
-
+            if (email == "") return CMD.RETRY;
+            return CMD.NIL;
             // create user
             
         }
@@ -134,25 +136,28 @@ namespace ERS
             {
                 if (password == "@2") // check password
                 {
-                    return CMD.PASS; // pair accepted
+                    return CMD.FORW; // pair accepted
                 }
             }
             return CMD.FAIL;
         }
 
-        private CMD checkForEmail(string input)
+        private CMD checkForEmail(string input, string? theEmail)
         {
+            CMD output = CMD.NIL;
             if (input[0] == '@')
             {
                 if (input == "@2")
                 {
-                    Console.WriteLine("And next..."); return CMD.PASS;
+                    //Console.WriteLine("And next...");
+                    output = CMD.FORW;
                     // now to check pass
                 }
                 else
                 {
+                    output = CMD.FORW;
                     // email not found
-                    Console.WriteLine("We couldn't find your email in our system"); return CMD.FAIL;
+                    //Console.WriteLine("We couldn't find your email in our system"); return CMD.FAIL;
                     // maybe they typed it wrong or they still need to put it in the system
                     //Bookmark = Page.SIGN_EM;                }
                 }
@@ -160,11 +165,11 @@ namespace ERS
             else
             {
                 // input was not in an expected format
-
-                Console.WriteLine("Unrecognized text input. Please use your full name@demo.com email");
-                //return Cmd.RETRY;
-                return CMD.FAIL;
+                //Console.WriteLine("Unrecognized text input. Please use your full name@demo.com email");
+                theEmail = null;
+                output = CMD.FAIL;
             }
+            return output;
         }
 
 
