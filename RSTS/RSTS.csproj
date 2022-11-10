@@ -1,6 +1,8 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <ItemGroup>
+    <ProjectReference Include="..\Interface\Interface.csproj" />
+    <ProjectReference Include="..\RSTS.DataInfrustructure\RSTS.DataInfrustructure.csproj" />
     <ProjectReference Include="..\Userzone\Userzone.csproj" />
   </ItemGroup>
 
