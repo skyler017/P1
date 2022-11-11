@@ -5,20 +5,25 @@ namespace Userzone;
 
 public class User : IEquatable<User>
 {
+    // Sub objects
+    public enum Role { SimpleUser = 0, Employee, Manager };//,Admin };
+
+    // Fields
     public int UserId { get; set; }
     public string userName { get; set; }
-    private string password;
-    public enum Role { SimpleUser = 0, Employee, Manager };//,Admin };
+    private string password { get; set; }
     public Role EmployeeType { get; set; }
 
-    public User(int Id, string name, string pass = "pass", int eType = 0)
+    // Constructor
+    public User(string name, string pass = "pass", int Id = 0, Role eType = Role.SimpleUser)
     {
-        UserId = Id;
         userName = name;
         password = pass;
-        EmployeeType = (Role) eType;
+        UserId = Id;
+        EmployeeType =  eType;
     }
 
+    // Methods
     public override string ToString()
     {
         return "Name: " + userName;
@@ -57,13 +62,13 @@ public class Example
         List<User> userL = new List<User>();
 
         // Add Users to the list.
-        userL.Add(new User(1234, "crank arm"));
-        userL.Add(new User(1334, "chain ring"));
-        userL.Add(new User(1434, "regular seat"));
-        userL.Add(new User(1444, "banana seat"));
-        userL.Add(new User(1534, "cassette"));
-        userL.Add(new User(1634, "shift lever"));
-        userL.Add(new User(0,"name","pass"));
+        userL.Add(new User("crank arm",   "", 1234));
+        userL.Add(new User("chain ring",  "", 1334));
+        userL.Add(new User("regular seat","", 1434));
+        userL.Add(new User("banana seat", "", 1444));
+        userL.Add(new User("cassette",    "", 1534));
+        userL.Add(new User("shift lever", "", 1634));
+        userL.Add(new User("name","pass", 0));
 
         // Write out the Users in the list. This will call the overridden ToString method
         // in the User class.
@@ -76,7 +81,7 @@ public class Example
         // Check the list for part #0. This calls the IEquatable.Equals method
         // of the User class, which checks the UserId for equality.
         Console.WriteLine("\nContains: User with Id=0: {0}",
-            userL.Contains(new User( 0, "name" )));
+            userL.Contains(new User( "name","", 0 )));
 
         // Find items where name contains "seat".
         Console.WriteLine("\nFind: User where name contains \"seat\": {0}",
@@ -87,7 +92,7 @@ public class Example
             userL.Exists(x => x.UserId == 0));
 
         Console.WriteLine("\nContains: User with Id=0: {0}",
-            userL.Contains(new User( 0, "name" )));
+            userL.Contains(new User( "name","", 0 )));
 
         /*This code example produces the following output:
 
