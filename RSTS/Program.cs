@@ -4,144 +4,258 @@ using Userzone;
 using DataInfrustructure;
 using Interface;
 using System.Text;
+using System.Diagnostics.CodeAnalysis;
 
 namespace ERS;
 
 class Program
 {
-    private enum Page { STARTUP=0, WELCOME
-        ,LOGIN_E,LOGIN_P//,LOGIN_EM,LOGIN_PM
-        ,SIGN_E,SIGN_EA,SIGN_P//,SIGN_EM,SIGN_EAM,SIGN_PM
-        }
-    private enum CMD { NIL=-1
-            , OPT1=1, OPT2=2 /**/ //, OPT9, OPT0
+    private enum Page { HOME = 0
+        , SIGNU_E, SIGNU_A, SIGNU_P, SIGNU_V // Signup for an account - E_mail, A_vailable, P_assword, V_alidate
+        , LOGIN_E, LOGIN_P, LOGIN_V // Login to existing account
+        , WELCOME
+    }
+    private enum CMD { NIL = -1
+            , OPT1 = 1, OPT2 = 2 /**/, OPT9 = 9
             , FORW, BACK, FAIL, RETRY
     };
 
-    const string Path = "./.LocalUserList";
+    private string NineToGoHome = "You can press 9 and 'enter' to go back to the homepage instead.";
 
+
+    //const string Path = "./.LocalUserList";
 
     public void StateMachine()
     {
-        Page Bookmark = Page.STARTUP;
-        CMD Orders = CMD.NIL;
-        string userInputMessage; //// Get rid of this
-        int userInput; ///// Get rid of this
+        Page Bookmark = Page.HOME;
+        CMD Orders;
         User Dave;
         string GivenUsername = "";
         string GivenPassword = "";
 
-        
         while (1 == 1)
         {
+            Orders = CMD.NIL;
             switch (Bookmark)
             {
-                case Page.STARTUP:
-                    STARTUP_WelcomeText();
-                    Orders = STARTUP_ProcessInputs();
+                case Page.HOME:
+                    GivenUsername = ""; // Wipe the variables
+                    GivenPassword = ""; // Wipe the variables
+                    HOME_WelcomeText();
+                    Orders = HOME_ProcessInput();
                     switch (Orders)
                     {
                         case CMD.OPT1: // Existing User
-                            Orders = CMD.NIL;
                             Bookmark = Page.LOGIN_E;
                             break;
                         case CMD.OPT2: // New User
-                            Orders = CMD.NIL; 
-                            Bookmark = Page.SIGN_E;
+                            Bookmark = Page.SIGNU_E;
                             break;
                         case CMD.RETRY: // input error
-                            Orders = CMD.NIL;
                             continue;
-                            //break;
                         default:
                             NESTED_DEFAULT_ERROR(Bookmark, Orders);
                             return;
-                            //break;
+                    }
+                    break;
+
+                case Page.SIGNU_E:
+                    GivenUsername = ""; // Wipe the variables
+                    GivenPassword = ""; // Wipe the variables
+                    SIGNU_E_Prompt();
+                    Orders = LOGIN_E_ProcessInput(out GivenUsername); // LOGIN is used rather than SIGNU because it still works
+                    switch (Orders)
+                    {
+                        case CMD.OPT9: // Go back
+                        case CMD.BACK:
+                            Bookmark = Page.HOME;
+                            break;
+                        case CMD.FORW: // Email is formatted correctly
+                            Bookmark = Page.SIGNU_A;
+                            break;
+                        case CMD.RETRY: // Input error
+                            continue;
+                        default:
+                            NESTED_DEFAULT_ERROR(Bookmark, Orders);
+                            return;
+                    }
+                    break;
+
+                case Page.SIGNU_A:
+                    Orders = SIGNU_A_CheckEmailAvailability(GivenUsername);
+                    GivenPassword = ""; // Wipe the variables
+                    switch (Orders)
+                    {
+                        case CMD.FORW: // Email is availale
+                            Bookmark = Page.SIGNU_P;
+                            break;
+                        case CMD.FAIL: // Email is already in the db
+                            Bookmark = Page.HOME;
+                            break;
+                        default:
+                            NESTED_DEFAULT_ERROR(Bookmark, Orders);
+                            return;
+                    }
+                    break;
+
+                case Page.SIGNU_P:
+                    GivenPassword = ""; // Wipe the variables
+                    SIGNU_P_Prompt();
+                    Orders = LOGIN_P_ProcessInput(out GivenPassword); // LOGIN is used rather than SIGNU because it still works
+                    switch (Orders)
+                    {
+                        case CMD.OPT9: // Go back
+                        case CMD.BACK:
+                            Bookmark = Page.HOME;
+                            continue;
+                        case CMD.FORW: // Password acceptable
+                            Bookmark = Page.SIGNU_V;
+                            break;
+                        case CMD.FAIL: // Something about the password is bad
+                            Bookmark = Page.SIGNU_P;
+                            break;
+                        default:
+                            NESTED_DEFAULT_ERROR(Bookmark, Orders);
+                            break;
+                    }
+                    break;
+
+                case Page.SIGNU_V:
+                    Orders = SIGNU_V_ValidateLogin(GivenUsername, GivenPassword);
+                    GivenUsername = ""; // Wipe the variables
+                    GivenPassword = ""; // Wipe the variables
+                    switch (Orders)
+                    {
+                        case CMD.FORW: // Account creation successful
+                            Bookmark = Page.WELCOME;
+                            break;
+                        case CMD.FAIL: // Could not create account for some reason
+                            Bookmark = Page.HOME;
+                            break;
+                        default:
+                            NESTED_DEFAULT_ERROR(Bookmark, Orders);
+                            return;
                     }
                     break;
 
                 case Page.LOGIN_E:
-                    Console.WriteLine("Preparing to log you in");
-                    Console.WriteLine("Please type in your full email (eg: name@demo.com) and press 'enter'.");
-                    Console.WriteLine("You can press 9 and 'enter' to go back to the homepage");
-                    userInputMessage = Console.ReadLine();
-                    if (Int32.TryParse(userInputMessage, out userInput))
+                    GivenUsername = ""; // Wipe the variables
+                    GivenPassword = ""; // Wipe the variables
+                    LOGIN_E_Prompt();
+                    Orders = LOGIN_E_ProcessInput(out GivenUsername);
+                    switch (Orders)
                     {
-                        if (userInput == 9) Bookmark = Page.STARTUP;
-                        else
-                        {
-                            Console.WriteLine("Only the number 9 is an acceptable input");
+                        case CMD.OPT9: // Go back
+                        case CMD.BACK:
+                            Bookmark = Page.HOME;
+                            break;
+                        case CMD.FORW: // Email acceptable
+                            Bookmark = Page.LOGIN_P;
+                            break;
+                        case CMD.RETRY: // Input error
                             continue;
-                        }
-                    }
-                    else
-                    {
-                        // check that the input string is in the correct format xxx@revature.com/net
-                        // compare input to working emails
-                        Orders = checkForEmail(userInputMessage, GivenUsername);
-                        switch (Orders)
-                        {
-                            case CMD.FORW: // email found
-                                Orders = CMD.NIL;
-                                Bookmark = Page.SIGN_P;
-                                break;
-                            case CMD.FAIL: // not in system or was input wrong
-                                Orders = CMD.NIL;
-                                //Bookmark = Page.SIGN_EM;
-                                continue;
-                                break;
-                            default:
-                                Console.WriteLine("Unhandled email return");
-                                return;
-                        }
+                        default:
+                            NESTED_DEFAULT_ERROR(Bookmark, Orders);
+                            return;
                     }
                     break;
-                case Page.SIGN_P:
-                    Console.WriteLine("Please type in your password (eg: password) and press 'enter'.");
-                    Console.WriteLine("You can type 9 and press 'enter' to go back to the homepage");
-                    userInputMessage = Console.ReadLine();
-                    if (Int32.TryParse(userInputMessage, out userInput))
+
+                case Page.LOGIN_P:
+                    GivenPassword = ""; // Wipe the variables
+                    LOGIN_P_Prompt();
+                    Orders = LOGIN_P_ProcessInput(out GivenPassword);
+                    switch (Orders)
                     {
-                        if (userInput == 9) Bookmark = Page.STARTUP;
-                        else
-                        {
-                            Console.WriteLine("Only the number 9 is an acceptable input");
+                        case CMD.OPT9: // Go back
+                        case CMD.BACK:
+                            Bookmark = Page.HOME;
                             continue;
-                        }
+                        case CMD.FORW: // Password acceptable
+                            Bookmark = Page.LOGIN_V;
+                            break;
+                        case CMD.FAIL: // Something about the password is bad
+                            Bookmark = Page.LOGIN_E;
+                            break;
+                        default:
+                            NESTED_DEFAULT_ERROR(Bookmark, Orders);
+                            break;
+                    }
+                    break;
+
+                case Page.LOGIN_V:
+                    Orders = LOGIN_V_ValidateLogin(GivenUsername, GivenPassword);
+                    GivenUsername = ""; // Wipe the variables
+                    GivenPassword = ""; // Wipe the variables
+                    switch (Orders)
+                    {
+                        case CMD.FORW: // Login successful
+                            Bookmark = Page.WELCOME;
+                            break;
+                        case CMD.FAIL: // Credentials not found
+                            Bookmark = Page.LOGIN_E;
+                            break;
+                        default:
+                            NESTED_DEFAULT_ERROR(Bookmark, Orders);
+                            return;
                     }
                     break;
                 default:
                     PageDoesNotExist(Bookmark);
                     return;
-                    //break;
             }
         }
     }
-    ///// general methods /////
+
+    ///// Shared Validation Methods /////
     private int CheckForValidNumerical(string input, int[] valids)
     {
         int userInputNum;
-        if (string.IsNullOrEmpty(input)) return -1;
-        else if(Int32.TryParse(input, out userInputNum))
+        //if (string.IsNullOrEmpty(input)) return -1;
+        //else 
+        if (Int32.TryParse(input, out userInputNum))
         {
             if (valids.Contains(userInputNum)) return userInputNum;
             else return -1;
         }
         return -1;
     }
-    private string CheckForEmail(string input)
+    private bool ValidateEmailFormat(string userString)
     {
-        return "0";
+        int theATIndex, theATIndex2;
+        // find the email paradigm, then check for invalid characters
+        if ((theATIndex = userString.IndexOf("@revature.com")) < 0) // find email paradigm
+        {
+            if (((theATIndex2 = userString.IndexOf("@")) != theATIndex)
+                || ((theATIndex2 = userString.IndexOf("@", theATIndex + 1)) > 0)
+                || !CheckNoEmailBannedChars(userString))
+                return false;
+            return true;
+        }
+        else if
+            ((theATIndex = userString.IndexOf("@revature.net")) < 0) // find email paradigm
+        {
+            // check for invalid characters
+            if (((theATIndex2 = userString.IndexOf("@")) != theATIndex)
+                || ((theATIndex2 = userString.IndexOf("@", theATIndex + 1)) > 0)
+                || !CheckNoEmailBannedChars(userString))
+                return false;
+            return true;
+        }
+        return false;
     }
-
-    private void NESTED_DEFAULT_ERROR(Page where, CMD why)
+    private bool CheckNoEmailBannedChars(string email)
     {
-        IInput page = new ConsoleBased();
-        page.DisplayPage($"Error on Page {where} due to Command {why}.\nExiting Program");
+        return true;
     }
-
+    private bool ValidatePasswordFormat(string password)
+    {
+        //if (password.Length >= 8)
+            return true;
+        return false;
+    }
+    
     ///// Pages and Processing /////
-    private void STARTUP_WelcomeText()
+    private void HOME_WelcomeText()
     {
         StringBuilder sb = new StringBuilder();
         sb.AppendLine("Welcome to ERS Ticketing.");
@@ -149,39 +263,136 @@ class Program
         sb.AppendLine("1.Login");
         sb.AppendLine("2.Sign-up");
         IInput page = new ConsoleBased();
-        page.DisplayPage(sb.ToString());
+        page.DisplayPage(new string[] { sb.ToString() });
     }
-
-    private CMD STARTUP_ProcessInputs()
+    private CMD HOME_ProcessInput()
     {
         string userInputMessage;
         int userInputNum;
-        ConsoleBased consoleBased = new ConsoleBased();
+        IInput consoleBased = new ConsoleBased();
 
         // Fetch the user's input string and ensure it is a 1 or 2
         userInputMessage = consoleBased.GetUserInput();
-        userInputNum = CheckForValidNumerical(userInputMessage, new int[] { 1, 2});
+        userInputNum = CheckForValidNumerical(userInputMessage, new int[] { 1, 2 });
         if (userInputNum > 0) return (CMD)userInputNum;
-        consoleBased.DisplayPage("Please enter a positive whole number");
+        consoleBased.DisplayPage(new string[] { "Please enter a number from the selection." });
         return CMD.RETRY;
-/*        if (!Int32.TryParse(userInputMessage, out userInput) || userInput <= 0)
-        {
-            Console.WriteLine("Please enter a positive whole number");//: " + userInput);
-            continue;
-        }
-        if (userInput == 1) Bookmark = Page.LOGIN_E;
-        //else if (userInput == 2) Bookmark = Page.SIGN_E;
-        else
-        {
-            Console.WriteLine("Please only input numbers from the selection");
-            continue;
-        }*/
+    }
+
+    private void SIGNU_E_Prompt()
+    {
+        StringBuilder sb = new StringBuilder();
+        sb.AppendLine("Preparing to create your account");
+        sb.AppendLine("Please type in your full email (eg: name@demo.com) and press 'enter'.");
+        sb.AppendLine(NineToGoHome);
+        IInput page = new ConsoleBased();
+        page.DisplayPage(new string[] { sb.ToString() });
+    }
+    private CMD SIGNU_A_CheckEmailAvailability(string email)
+    {
         return CMD.NIL;
     }
+    private void SIGNU_P_Prompt()
+    {
+        StringBuilder sb = new StringBuilder();
+        sb.AppendLine("Preparing to create your account");
+        sb.AppendLine("Please type in your password (eg: password) and press 'enter'.");
+        sb.AppendLine(NineToGoHome);
+        IInput page = new ConsoleBased();
+        page.DisplayPage(new string[] { sb.ToString() });
+    }
+    private CMD SIGNU_V_ValidateLogin(string username, string password)
+    {
+        return CMD.NIL;
+    }
+
+    private void LOGIN_E_Prompt()
+    {
+        StringBuilder sb = new StringBuilder();
+        sb.AppendLine("Preparing to log you in");
+        sb.AppendLine("Please type in your full email (eg: name@demo.com) and press 'enter'.");
+        sb.AppendLine(NineToGoHome);
+        IInput page = new ConsoleBased();
+        page.DisplayPage(new string[] { sb.ToString() });
+    }
+    private CMD LOGIN_E_ProcessInput(out string email)
+    {
+        email = "";
+        string userInputMessage;
+        int userInputNum;
+        IInput consoleBased = new ConsoleBased();
+
+        // Fetch the user's input string
+        userInputMessage = consoleBased.GetUserInput();
+
+        // check for 9
+        userInputNum = CheckForValidNumerical(userInputMessage, new int[] { 9 });
+        if (userInputNum == 9) return CMD.BACK;
+
+        // check for the email fomat xxx@revature.com/net
+        // compare input to expected email paradigms
+/*        if (!ValidateEmailFormat(userInputMessage))
+        {
+            consoleBased.DisplayPage(new string[] { "The input was not recognized as an email.");
+            return CMD.RETRY;
+MVP        }*/
+
+        // must be an email if its made it here
+        email = userInputMessage;
+        return CMD.FORW;
+    }
+    private void LOGIN_P_Prompt()
+    {
+        StringBuilder sb = new StringBuilder();
+        sb.AppendLine("Preparing to log you in");
+        sb.AppendLine("Please type in your password (eg: password) and press 'enter'.");
+        sb.AppendLine(NineToGoHome);
+        IInput page = new ConsoleBased();
+        page.DisplayPage(new string[] { sb.ToString() });
+    }
+    private CMD LOGIN_P_ProcessInput(out string password)
+    {
+        password = "";
+        string userInputMessage;
+        int userInputNum;
+        IInput consoleBased = new ConsoleBased();
+
+        // Fetch the user's input string
+        userInputMessage = consoleBased.GetUserInput();
+
+        // check for 9
+        userInputNum = CheckForValidNumerical(userInputMessage, new int[] { 9 });
+        if (userInputNum == 9) return CMD.BACK;
+
+        // check the password conformity rules
+        if (!ValidatePasswordFormat(userInputMessage))
+        {
+            consoleBased.DisplayPage(new string[] { "This password cannot be accepted." });
+            return CMD.FAIL;
+        }
+
+        // the password must be fine if its made it here
+        password = userInputMessage;
+        return CMD.FORW;
+    }
+    private CMD LOGIN_V_ValidateLogin(string username, string password)
+    {
+        return CMD.NIL;
+    }
+
     private void PageDoesNotExist(Page which)
     {
-        Console.WriteLine("The requested page does not exist: " + which);
+        ConsoleBased CB = new ConsoleBased();
+        CB.DisplayPage(new string[] { "The requested page does not exist: " + which });
     }
+
+    private void NESTED_DEFAULT_ERROR(Page where, CMD why)
+    {
+        IInput page = new ConsoleBased();
+        page.DisplayPage(new string[] { $"Error on Page {where} due to Command {why}.\nExiting Program" });
+    }
+
+    ///// Database Interaction /////
     private bool CheckForExistingUser(string path, string email)
     {
         if(email != null)
@@ -215,36 +426,6 @@ class Program
         return CMD.FAIL;
     }
 
-    private CMD checkForEmail(string input, string? theEmail)
-    {
-        CMD output = CMD.NIL;
-        if (input[0] == '@')
-        {
-            if (input == "@2")
-            {
-                //Console.WriteLine("And next...");
-                output = CMD.FORW;
-                // now to check pass
-            }
-            else
-            {
-                output = CMD.FORW;
-                // email not found
-                //Console.WriteLine("We couldn't find your email in our system"); return CMD.FAIL;
-                // maybe they typed it wrong or they still need to put it in the system
-                //Bookmark = Page.SIGN_EM;                }
-            }
-        }
-        else
-        {
-            // input was not in an expected format
-            //Console.WriteLine("Unrecognized text input. Please use your full name@demo.com email");
-            theEmail = null;
-            output = CMD.FAIL;
-        }
-        return output;
-    }
-
 
     // prompt 1.login or 2.signup
     //      1.login - 1.prompt email
@@ -262,6 +443,7 @@ class Program
     {
         Program thread = new Program();
         thread.StateMachine();
-        Console.WriteLine("Error: Program caused a return");
+        ConsoleBased CB = new ConsoleBased();
+        CB.DisplayPage(new string[] { "Error: Program caused a return" });
     }
 }
