@@ -10,5 +10,5 @@ public interface IInput
 {
     // Contract Methods
     public string GetUserInput();
-    public void DisplayPage(string words);
+    public void DisplayPage(string[] words);
 }

@@ -20,9 +20,10 @@ namespace Interface
             if (incoming != null) return incoming;
             else return "";
         }
-        public void DisplayPage(string page)
+        public void DisplayPage(string[] page)
         {
-            Console.WriteLine(page);
+            foreach(string s in page)
+                Console.WriteLine(s);
         }
     }
 }
