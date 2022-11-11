@@ -9,6 +9,7 @@
 
 #Connection Strings
 RSTS.connectionstring
+*.sql
 
 
 
