@@ -9,13 +9,24 @@ public class User : IEquatable<User>
     public enum Role { SimpleUser = 0, Employee, Manager };//,Admin };
 
     // Fields
+    public int UserId { get; set; }
     public string userName { get; set; }
     public string password { get; set; }
-    public int UserId { get; set; }
     public Role EmployeeType { get; set; }
 
-    // Constructor
-    // This overload is for recreating the user returned from the database
+    // Constructors
+    /// <summary>
+    /// This overload is the empty User object that gets filled by the database.
+    /// </summary>
+    public User() { }
+
+    /// <summary>
+    /// This overload is the complete User object returned by the database
+    /// </summary>
+    /// <param name="name"></param>
+    /// <param name="pass"></param>
+    /// <param name="Id"></param>
+    /// <param name="eType"></param>
     public User(string name, string pass, int Id, Role eType)
     {
         userName = name;
@@ -23,8 +34,12 @@ public class User : IEquatable<User>
         UserId = Id;
         EmployeeType =  eType;
     }
-
-    // This overload is used to log the user in
+    
+    /// <summary>
+    /// This overload is the partial User object created by the user
+    /// </summary>
+    /// <param name="name"></param>
+    /// <param name="pass"></param>
     public User(string name, string pass)
     {
         userName = name;
