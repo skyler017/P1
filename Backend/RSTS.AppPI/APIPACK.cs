@@ -2,7 +2,7 @@ using RSTS.AppPI;
 using RSTS.DataInfrustructure;
 
 Console.WriteLine("Hello, World!");
-string connectionstring = @"C:/Users/TOWER/Desktop/revrev/P1/RSTS.DataInfrustructure/RSTS.connectionstring";
+string connectionstring = @"C:/Users/TOWER/Desktop/revrev/P1/Backend/RSTS.DataInfrustructure/RSTS.connectionstring";
 
 var builder = WebApplication.CreateBuilder(args);
 
