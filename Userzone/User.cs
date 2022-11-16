@@ -9,13 +9,14 @@ public class User : IEquatable<User>
     public enum Role { SimpleUser = 0, Employee, Manager };//,Admin };
 
     // Fields
-    public int UserId { get; set; }
     public string userName { get; set; }
-    private string password { get; set; }
+    public string password { get; set; }
+    public int UserId { get; set; }
     public Role EmployeeType { get; set; }
 
     // Constructor
-    public User(string name, string pass = "pass", int Id = 0, Role eType = Role.SimpleUser)
+    // This overload is for recreating the user returned from the database
+    public User(string name, string pass, int Id, Role eType)
     {
         userName = name;
         password = pass;
@@ -23,10 +24,17 @@ public class User : IEquatable<User>
         EmployeeType =  eType;
     }
 
+    // This overload is used to log the user in
+    public User(string name, string pass)
+    {
+        userName = name;
+        password = pass;
+    }
+
     // Methods
     public override string ToString()
     {
-        return "Name: " + userName;
+        return "Username: " + userName + ". Role: " + EmployeeType.ToString();
     }
 
     public override bool Equals(object obj)
@@ -40,6 +48,7 @@ public class User : IEquatable<User>
     {
         return UserId;
     }
+
     /// <summary>
     /// Overrides object.Equals() and the == and != operators.
     /// Use to confirm correct login credentials
@@ -58,16 +67,18 @@ public class Example
 {
     public static void Main()
     {
-        // Create a list of Users.
+    }
+}
+/*        // Create a list of Users.
         List<User> userL = new List<User>();
 
         // Add Users to the list.
-        userL.Add(new User("crank arm",   "", 1234));
-        userL.Add(new User("chain ring",  "", 1334));
-        userL.Add(new User("regular seat","", 1434));
-        userL.Add(new User("banana seat", "", 1444));
-        userL.Add(new User("cassette",    "", 1534));
-        userL.Add(new User("shift lever", "", 1634));
+        userL.Add(new User("crank arm",   "", 1234, 0));
+        userL.Add(new User("chain ring",  "", 1334, 0));
+        userL.Add(new User("regular seat","", 1434, 0));
+        userL.Add(new User("banana seat", "", 1444, 0));
+        userL.Add(new User("cassette",    "", 1534, 0));
+        userL.Add(new User("shift lever", "", 1634, 0));
         userL.Add(new User("name","pass", 0));
 
         // Write out the Users in the list. This will call the overridden ToString method
@@ -109,5 +120,5 @@ public class Example
 
         Exists: User with Id=1444: True
         */
-    }
-}
+//    }
+//}

@@ -10,7 +10,9 @@ namespace DataInfrustructure;
 public interface IRepository
 {
     // Contract Methods
-    public string GetCredentials(string username, string password);
-    public User FindUser(string username, string password);
+
+    //public string GetCredentials(string username, string password);
+    //public bool ValidateCredentials(string username, string password);
+    //public User FindUser(string username, string password);
 
 }
