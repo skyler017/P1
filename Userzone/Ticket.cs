@@ -9,10 +9,10 @@ namespace Userzone
     public class Ticket
     {
         // Fields
+        public int RequestID { get; set; }
         public int AuthorID { get; set; }
         public double Amount { get; set; }
         public string Message { get; set; }
-        public int RequestID { get; set; }
         public DateTime RequestDate { get; set; }
         public enum Approval { Pending=0, Denied=-1, Approved=1 };
         public Approval Status;
@@ -20,11 +20,12 @@ namespace Userzone
 
         // Constructor
         /// <summary>
-        /// This is the empty invoice that gets filled by the database
+        /// This overload is the empty Ticket that gets filled by the database.
         /// </summary>
         public Ticket() { }
+
         /// <summary>
-        /// This is the completed invoice returned by the database
+        /// This overload is the completed Ticket returned by the database.
         /// </summary>
         /// <param name="authorid"></param>
         /// <param name="amount"></param>
@@ -42,7 +43,7 @@ namespace Userzone
         }
 
         /// <summary>
-        /// This is the invoice created by the user
+        /// This overload is the partial Ticket created by the user.
         /// </summary>
         /// <param name="authorid"></param>
         /// <param name="amount"></param>

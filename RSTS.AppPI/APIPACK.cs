@@ -13,7 +13,7 @@ builder.Services.AddSwaggerGen();
 
 var connValue = File.ReadAllText(connectionstring);
 //var connValue = builder.Configuration.GetValue<string>("ConnectionString:NorthwindDB");
-TicketRepository TR = new TicketRepository(connValue);
+TicketRepository TicketRoll = new TicketRepository(connValue);
 
 
 builder.Services.AddTransient<CategoryRepository>();
@@ -54,11 +54,11 @@ app.MapGet("/weatherforecast", () =>
 // Tickets start here
 //https://localhost:7152/ticketplease
 app.MapGet("/ticketplease", () =>
-    TR.ReadAllTickets());
+    TicketRoll.GetAll());
 
 //https://localhost:7152/ticket/1
 app.MapGet("/ticketplease/{id}", (int id) =>
-    TR.ReadTicketbyId(id));
+    TicketRoll.Get(id));
 // End Tickets
 //=================================
 
