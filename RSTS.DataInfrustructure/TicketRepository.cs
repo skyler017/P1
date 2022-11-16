@@ -10,7 +10,9 @@ using Userzone;
 
 namespace RSTS.DataInfrustructure;
 
-internal class TicketRepository
+
+// CRUD operations on the Ticket object and the db
+public class TicketRepository
 {
     private readonly string _connectionstring;
 
@@ -19,9 +21,8 @@ internal class TicketRepository
         _connectionstring = connectionstring;
     }
 
-    public List<Ticket> GetAllTickets()
+    public List<Ticket> ReadAllTickets()
     {
-
         using SqlConnection connection = new SqlConnection(_connectionstring);
         connection.Open();
 
@@ -30,14 +31,13 @@ internal class TicketRepository
         cmdText.Append(" AuthorID, Amount, Message, RequestId, RequestDate, ApprovalStatus ");
         cmdText.Append(" FROM RSTS.Tickets ");
         using SqlCommand cmd = new SqlCommand(cmdText.ToString(), connection);
-
         using SqlDataReader reader = cmd.ExecuteReader();
 
         List<Ticket> AllTickets = new List<Ticket>();
         while (reader.Read())
         {
             Ticket t = new Ticket();
-            t.AuthorID = reader["AuthorID"].ToString();
+            t.AuthorID = Int32.Parse(reader["AuthorID"].ToString());
             t.Amount = Int32.Parse(reader["Amount"].ToString());
             t.Message = reader["Message"].ToString();
             t.RequestID = Int32.Parse(reader["RequestId"].ToString());
@@ -51,28 +51,32 @@ internal class TicketRepository
         return AllTickets;
     }
 
-    public Ticket GetTicketbyId(int requestID)
+
+    public Ticket ReadTicketbyId(int requestID)
     {
+        using SqlConnection connection = new SqlConnection(_connectionstring);
+        connection.Open();
+
         // retrieve a ticket from the db
         StringBuilder cmdText = new StringBuilder();
         cmdText.Append(" SELECT ");
         cmdText.Append(" AuthorID, Amount, Message, RequestId, RequestDate, ApprovalStatus ");
         cmdText.Append(" FROM RSTS.Tickets ");
         cmdText.Append(" WHERE RequestId = @RID ");
-        using SqlCommand cmd = new SqlCommand(cmdText.ToString(), _connectionstring);
+        using SqlCommand cmd = new SqlCommand(cmdText.ToString(), connection);
         cmd.Parameters.AddWithValue("@RID", requestID);
         using SqlDataReader reader = cmd.ExecuteReader();
 
         // Parse the returned data table
+        Ticket t = new Ticket();
         while (reader.Read())
         {
-            Ticket t = new Ticket();
-            t.AuthorID = reader["AuthorID"].ToString();
-            t.Amount = reader["Amount"].ToInt();
+            t.AuthorID = Int32.Parse(reader["AuthorID"].ToString());
+            t.Amount = Int32.Parse(reader["Amount"].ToString());
             t.Message = reader["Message"].ToString();
-            t.RequestID = reader["RequestId"].ToInt();
-            t.RequestDate = reader["RequestDate"].ToDateTime();
-            t.Status = (Invoice.Approval)reader["ApprovalStatus"].ToInt();
+            t.RequestID = Int32.Parse(reader["RequestId"].ToString());
+            t.RequestDate = DateTime.Parse(reader["RequestDate"].ToString());
+            t.Status = (Ticket.Approval)Int32.Parse(reader["ApprovalStatus"].ToString());
         }
         reader.Close();
         cmd.Dispose();
@@ -82,7 +86,7 @@ internal class TicketRepository
 
     public Ticket CreateTicket(Ticket t)
     {
-        using SqlConnection connection = new SqlConnection(_connectionString);
+        using SqlConnection connection = new SqlConnection(_connectionstring);
         connection.Open();
 
         // Add ticket to db
@@ -97,44 +101,47 @@ internal class TicketRepository
         cmd.Parameters.AddWithValue("@message", t.Message);
         cmd.Parameters.AddWithValue("@approval", Ticket.Approval.Pending);
         cmd.ExecuteNonQuery();
+
+        // retrieve the retuned id
         int newId = Convert.ToInt32(cmd.ExecuteScalar());
         t.RequestID = newId;
         return t;
     }
 
-    public void Update(string connString, int id, Ticket category)
+    public void UpdateTicket(int OldVersionID, Ticket UpdatedTicket)
     {
-        using (SqlConnection connection = new SqlConnection(connString))
-        {
-            StringBuilder qry = new StringBuilder();
-            qry.Append(" UPDATE Categories");
-            qry.Append($" SET CategoryName = '{category.CategoryName}'");
-            qry.Append($" , Description = '{category.Description}'");
-            qry.Append($" WHERE CategoryId = {id}");
-            Console.WriteLine(qry.ToString());
+        using SqlConnection connection = new SqlConnection(_connectionstring);
+        connection.Open();
 
-            SqlCommand cmd = new SqlCommand(qry.ToString(), connection);
-            connection.Open();
-            cmd.ExecuteNonQuery();
-            cmd.Dispose();
-        }
+        string cmdText = @" UPDATE Categories SET " +
+            " AuthorID = @userid " +
+            " , Amount = @amount " +
+            " , Message = @message " +
+            " , RequestDate = SYSUTCDATETIME() " +
+            " , ApprovalStatus  = @approval " +
+            " WHERE RequestId = @RID ";
+        using SqlCommand cmd = new SqlCommand(cmdText, connection);
+        cmd.Parameters.AddWithValue("@UID", UpdatedTicket.AuthorID);
+        cmd.Parameters.AddWithValue("@amount", UpdatedTicket.Amount);
+        cmd.Parameters.AddWithValue("@message", UpdatedTicket.Message);
+        cmd.Parameters.AddWithValue("@approval", Ticket.Approval.Pending);
+        cmd.Parameters.AddWithValue("@RID", OldVersionID);
+        cmd.ExecuteNonQuery();
+        cmd.Dispose();
         return;
     }
 
-    public void Delete(string connString, int id)
+    public void DeleteTicket(int id)
     {
-        using (SqlConnection connection = new SqlConnection(connString))
-        {
-            StringBuilder qry = new StringBuilder();
-            qry.Append(" DELETE FROM Categories");
-            qry.Append($" WHERE CategoryId = {id}");
-            Console.WriteLine(qry.ToString());
+        using SqlConnection connection = new SqlConnection(_connectionstring);
+        connection.Open();
+        string cmdText = " DELETE FROM Categories" +
+                " WHERE RequestId = @RID";
 
-            SqlCommand cmd = new SqlCommand(qry.ToString(), connection);
-            connection.Open();
-            cmd.ExecuteNonQuery();
-            cmd.Dispose();
-        }
+        using SqlCommand cmd = new SqlCommand(cmdText, connection);
+        cmd.Parameters.AddWithValue("@RID", id);
+        cmd.ExecuteNonQuery();
+        cmd.Dispose();
         return;
     }
 }

@@ -1,5 +1,4 @@
-﻿using DataInfrustructure;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Data.SqlClient;
 using System.Net.Sockets;
 using System.Xml;
@@ -77,7 +76,7 @@ public class SQLLink : IRepository
         return shell;
     }
 
-    public Invoice RetrieveMostRecentInvoice(int userid )
+    public Ticket RetrieveMostRecentInvoice(int userid )
     {
         using SqlConnection connection = new SqlConnection(_connectionString);
         connection.Open();
@@ -93,7 +92,7 @@ public class SQLLink : IRepository
         using SqlDataReader reader = cmd2.ExecuteReader();
 
         // Parse the returned data table
-        Invoice? shell = null;
+        Ticket? shell = null;
         while (reader.Read())
         {
             int authorid = reader.GetInt32(0);
@@ -101,8 +100,8 @@ public class SQLLink : IRepository
             string message = reader.GetString(2);
             int requestid = reader.GetInt32(3);
             DateTime requestdate = reader.GetDateTime(4);
-            Invoice.Approval status = (Invoice.Approval)reader.GetInt32(5);
-            shell = new Invoice(authorid, amount, message, requestid, requestdate, status);
+            Ticket.Approval status = (Ticket.Approval)reader.GetInt32(5);
+            shell = new Ticket(authorid, amount, message, requestid, requestdate, status);
             return shell;
         } // The SQLDataReader does not need to close because it was made temporary to begin with
 
@@ -110,7 +109,7 @@ public class SQLLink : IRepository
         return null;
     }
 
-    public bool SendOffInvoice(Invoice Ticket)
+    public bool SendOffInvoice(Ticket t)
     {
         using SqlConnection connection = new SqlConnection(_connectionString);
         connection.Open();
@@ -121,18 +120,18 @@ public class SQLLink : IRepository
                 "VALUES " +
                 "(@UID,@amount,@message,SYSUTCDATETIME(),@approval);";
         using SqlCommand cmd = new SqlCommand(cmdText, connection);
-        cmd.Parameters.AddWithValue("@UID", Ticket.AuthorID);
-        cmd.Parameters.AddWithValue("@amount", Ticket.Amount);
-        cmd.Parameters.AddWithValue("@message", Ticket.Message);
-        cmd.Parameters.AddWithValue("@approval", Invoice.Approval.Pending);
+        cmd.Parameters.AddWithValue("@UID", t.AuthorID);
+        cmd.Parameters.AddWithValue("@amount", t.Amount);
+        cmd.Parameters.AddWithValue("@message", t.Message);
+        cmd.Parameters.AddWithValue("@approval", Ticket.Approval.Pending);
         cmd.ExecuteNonQuery();
 
-        Invoice shell = RetrieveMostRecentInvoice(Ticket.AuthorID);
+        Ticket shell = RetrieveMostRecentInvoice(t.AuthorID);
 
         if (shell == null || 
-            shell.AuthorID != Ticket.AuthorID ||
-            shell.Amount != Ticket.Amount ||
-            shell.Message != Ticket.Message)
+            shell.AuthorID != t.AuthorID ||
+            shell.Amount != t.Amount ||
+            shell.Message != t.Message)
             return false;
         return true;
     }

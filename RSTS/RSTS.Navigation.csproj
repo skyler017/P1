@@ -1,6 +1,10 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <ItemGroup>
+    <PackageReference Include="Microsoft.AspNet.WebApi.Client" Version="5.2.9" />
+  </ItemGroup>
+
+  <ItemGroup>
     <ProjectReference Include="..\Interface\Interface.csproj" />
     <ProjectReference Include="..\RSTS.DataInfrustructure\RSTS.DataInfrustructure.csproj" />
     <ProjectReference Include="..\Userzone\Userzone.csproj" />
