@@ -23,11 +23,11 @@ class Program
         User who2 = where.CreateUser(who.userName, who.password);
         ConsoleBased doit = new ConsoleBased();
         doit.DisplayPage(new string[] { who2.ToString()});
-        Invoice Ticket = new Invoice(who2.UserId,43,"why");
-        bool what = where.SendOffInvoice(Ticket);
+        Ticket t = new Ticket(who2.UserId,43,"why");
+        bool what = where.SendOffInvoice(t);
         if (what) doit.DisplayPage(new string[] { who2.ToString() });
         else doit.DisplayPage(new string[] { "nope" });
-        Invoice please = where.RetrieveMostRecentInvoice(who2.UserId);
+        Ticket please = where.RetrieveMostRecentInvoice(who2.UserId);
         doit.DisplayPage(new string[] { please.ToString() });
 
         ////////

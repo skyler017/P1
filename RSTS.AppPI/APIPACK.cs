@@ -1,4 +1,6 @@
 using RSTS.AppPI;
+using RSTS.DataInfrustructure;
+
 Console.WriteLine("Hello, World!");
 string connectionstring = @"C:/Users/TOWER/Desktop/revrev/P1/RSTS.DataInfrustructure/RSTS.connectionstring";
 
@@ -11,9 +13,14 @@ builder.Services.AddSwaggerGen();
 
 var connValue = File.ReadAllText(connectionstring);
 //var connValue = builder.Configuration.GetValue<string>("ConnectionString:NorthwindDB");
+TicketRepository TR = new TicketRepository(connValue);
+
+
 builder.Services.AddTransient<CategoryRepository>();
 
 var app = builder.Build();
+
+
 
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
@@ -43,6 +50,17 @@ app.MapGet("/weatherforecast", () =>
 })
 .WithName("GetWeatherForecast");
 
+// >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+// Tickets start here
+//https://localhost:7152/ticketplease
+app.MapGet("/ticketplease", () =>
+    TR.ReadAllTickets());
+
+//https://localhost:7152/ticket/1
+app.MapGet("/ticketplease/{id}", (int id) =>
+    TR.ReadTicketbyId(id));
+// End Tickets
+//=================================
 
 //https://localhost:7152/categories/
 app.MapGet("/categories", (CategoryRepository repo) =>
