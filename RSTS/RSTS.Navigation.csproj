@@ -1,0 +1,16 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <ItemGroup>
+    <ProjectReference Include="..\Interface\Interface.csproj" />
+    <ProjectReference Include="..\RSTS.DataInfrustructure\RSTS.DataInfrustructure.csproj" />
+    <ProjectReference Include="..\RSTS.Userzone\RSTS.Userzone.csproj" />
+  </ItemGroup>
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net6.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+  </PropertyGroup>
+
+</Project>
