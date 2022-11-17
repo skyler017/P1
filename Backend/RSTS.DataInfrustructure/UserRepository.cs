@@ -35,12 +35,10 @@ public class UserRepository
         while (reader.Read())
         {
             User u = new User();
-            u.UserId = Int32.Parse(reader["UserID"].ToString());
-            u.Username = reader["Message"].ToString();
-            t.Amount = Int32.Parse(reader["Amount"].ToString());
-            t.Message = reader["Message"].ToString();
-            t.RequestDate = DateTime.Parse(reader["RequestDate"].ToString());
-            t.Status = (Ticket.Approval)Int32.Parse(reader["ApprovalStatus"].ToString());
+            u.UserID = Int32.Parse(reader["UserID"].ToString());
+            u.Username = reader["Username"].ToString();
+            u.Password = reader["Password"].ToString();
+            u.EmployeeType = (User.Role)Int32.Parse(reader["ApprovalStatus"].ToString());
 
             AllUsers.Add(u);
         }
@@ -50,7 +48,7 @@ public class UserRepository
     }
 
 
-    public Ticket Get(int requestID)
+    public User Get(int searchid)
     {
         using SqlConnection connection = new SqlConnection(_connectionstring);
         connection.Open();
@@ -58,72 +56,68 @@ public class UserRepository
         // retrieve a ticket from the db
         StringBuilder cmdText = new StringBuilder();
         cmdText.Append(" SELECT ");
-        cmdText.Append(" RequestID, AuthorID, Amount, Message, RequestDate, ApprovalStatus ");
-        cmdText.Append(" FROM RSTS.Tickets ");
-        cmdText.Append(" WHERE RequestID = @RID ");
+        cmdText.Append(" UserID, Username, Password, EmployeeType ");
+        cmdText.Append(" FROM RSTS.Users ");
+        cmdText.Append(" WHERE UserID = @UID ");
         using SqlCommand cmd = new SqlCommand(cmdText.ToString(), connection);
-        cmd.Parameters.AddWithValue("@RID", requestID);
+        cmd.Parameters.AddWithValue("@UID", searchid);
         using SqlDataReader reader = cmd.ExecuteReader();
 
         // Parse the returned data table
-        Ticket t = new Ticket();
+        User u = new User();
         while (reader.Read())
         {
-            t.RequestID = Int32.Parse(reader["RequestID"].ToString());
-            t.AuthorID = Int32.Parse(reader["AuthorID"].ToString());
-            t.Amount = Int32.Parse(reader["Amount"].ToString());
-            t.Message = reader["Message"].ToString();
-            t.RequestDate = DateTime.Parse(reader["RequestDate"].ToString());
-            t.Status = (Ticket.Approval)Int32.Parse(reader["ApprovalStatus"].ToString());
+            u.UserID = Int32.Parse(reader["UserID"].ToString());
+            u.Username = reader["Username"].ToString();
+            u.Password = reader["Password"].ToString();
+            u.EmployeeType = (User.Role)Int32.Parse(reader["EmployeeType"].ToString());
         }
         reader.Close();
         cmd.Dispose();
 
-        return t;
+        return u;
     }
 
-    public Ticket Create(Ticket t)
+    public User Create(User u)
     {
         using SqlConnection connection = new SqlConnection(_connectionstring);
         connection.Open();
 
         // Add ticket to db
-        string cmdText =
-            @"INSERT INTO RSTS.Tickets(AuthorID, Amount, Message, RequestDate, ApprovalStatus) " +
-                "VALUES " +
-                "(@UID,@amount,@message,SYSUTCDATETIME(),@approval); " +
-                "SELECT @@IDENTITY;";
-        using SqlCommand cmd = new SqlCommand(cmdText, connection);
-        cmd.Parameters.AddWithValue("@UID", t.AuthorID);
-        cmd.Parameters.AddWithValue("@amount", t.Amount);
-        cmd.Parameters.AddWithValue("@message", t.Message);
-        cmd.Parameters.AddWithValue("@approval", Ticket.Approval.Pending);
+        StringBuilder cmdText = new StringBuilder();
+        cmdText.Append(" INSERT INTO ");
+        cmdText.Append(" RSTS.Users ");
+        cmdText.Append(" VALUES ");
+        cmdText.Append(" (Username, Password, EmployeeType) ");
+        cmdText.Append(" (@username,@password,@etype); ");
+        cmdText.Append(" SELECT @@IDENTITY;");
+        using SqlCommand cmd = new SqlCommand(cmdText.ToString(), connection);
+        cmd.Parameters.AddWithValue("@username", u.Username);
+        cmd.Parameters.AddWithValue("@password", u.Password);
+        cmd.Parameters.AddWithValue("@etype", User.Role.Employee);
         cmd.ExecuteNonQuery();
 
         // retrieve the returned identity pk_requestid
         int newId = Convert.ToInt32(cmd.ExecuteScalar());
-        t.RequestID = newId;
-        return t;
+        u.UserID = newId;
+        return u;
     }
 
-    public void Update(int OldVersionID, Ticket UpdatedTicket)
+    public void Update(int usertoupdateID, User UpdatedUser)
     {
         using SqlConnection connection = new SqlConnection(_connectionstring);
         connection.Open();
-
-        string cmdText = @" UPDATE Categories SET " +
-            " AuthorID = @userid " +
-            " , Amount = @amount " +
-            " , Message = @message " +
-            " , RequestDate = SYSUTCDATETIME() " +
-            " , ApprovalStatus  = @approval " +
-            " WHERE RequestID = @RID ";
-        using SqlCommand cmd = new SqlCommand(cmdText, connection);
-        cmd.Parameters.AddWithValue("@UID", UpdatedTicket.AuthorID);
-        cmd.Parameters.AddWithValue("@amount", UpdatedTicket.Amount);
-        cmd.Parameters.AddWithValue("@message", UpdatedTicket.Message);
-        cmd.Parameters.AddWithValue("@approval", Ticket.Approval.Pending);
-        cmd.Parameters.AddWithValue("@RID", OldVersionID);
+        StringBuilder cmdText = new StringBuilder();
+        cmdText.Append(" UPDATE RSTS.Users SET ");
+        cmdText.Append(" Username = @password ");
+        cmdText.Append(", Password = @message ");
+        cmdText.Append(", EmployeeType = @etype ");
+        cmdText.Append(" WHERE UserID = @UID ");
+        using SqlCommand cmd = new SqlCommand(cmdText.ToString(), connection);
+        cmd.Parameters.AddWithValue("@username", UpdatedUser.Username);
+        cmd.Parameters.AddWithValue("@password", UpdatedUser.Password);
+        cmd.Parameters.AddWithValue("@etype", User.Role.Employee);
+        cmd.Parameters.AddWithValue("@UID", usertoupdateID);
         cmd.ExecuteNonQuery();
         cmd.Dispose();
         return;
@@ -133,11 +127,11 @@ public class UserRepository
     {
         using SqlConnection connection = new SqlConnection(_connectionstring);
         connection.Open();
-        string cmdText = " DELETE FROM Categories" +
-                " WHERE RequestID = @RID";
+        string cmdText = " DELETE FROM RSTS.Users" +
+                " WHERE UserID = @UID";
 
         using SqlCommand cmd = new SqlCommand(cmdText, connection);
-        cmd.Parameters.AddWithValue("@RID", id);
+        cmd.Parameters.AddWithValue("@UID", id);
         cmd.ExecuteNonQuery();
         cmd.Dispose();
         return;

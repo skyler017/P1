@@ -113,7 +113,7 @@ public class TicketRepository
         using SqlConnection connection = new SqlConnection(_connectionstring);
         connection.Open();
 
-        string cmdText = @" UPDATE Categories SET " +
+        string cmdText = @" UPDATE RSTS.Tickets SET " +
             " AuthorID = @userid " +
             " , Amount = @amount " +
             " , Message = @message " +
@@ -135,9 +135,8 @@ public class TicketRepository
     {
         using SqlConnection connection = new SqlConnection(_connectionstring);
         connection.Open();
-        string cmdText = " DELETE FROM Categories" +
+        string cmdText = " DELETE FROM RSTS.Tickets" +
                 " WHERE RequestID = @RID";
-
         using SqlCommand cmd = new SqlCommand(cmdText, connection);
         cmd.Parameters.AddWithValue("@RID", id);
         cmd.ExecuteNonQuery();

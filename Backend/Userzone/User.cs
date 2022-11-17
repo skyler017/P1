@@ -9,9 +9,9 @@ public class User : IEquatable<User>
     public enum Role { SimpleUser = 0, Employee, Manager };//,Admin };
 
     // Fields
-    public int UserId { get; set; }
-    public string userName { get; set; }
-    public string password { get; set; }
+    public int UserID { get; set; }
+    public string Username { get; set; }
+    public string Password { get; set; }
     public Role EmployeeType { get; set; }
 
     // Constructors
@@ -27,12 +27,12 @@ public class User : IEquatable<User>
     /// <param name="pass"></param>
     /// <param name="Id"></param>
     /// <param name="eType"></param>
-    public User(string name, string pass, int Id, Role eType)
+    public User(string name, string pass, int Id, Role employeeType)
     {
-        userName = name;
-        password = pass;
-        UserId = Id;
-        EmployeeType =  eType;
+        UserID = Id;
+        Username = name;
+        Password = pass;
+        EmployeeType = employeeType;
     }
     
     /// <summary>
@@ -42,14 +42,14 @@ public class User : IEquatable<User>
     /// <param name="pass"></param>
     public User(string name, string pass)
     {
-        userName = name;
-        password = pass;
+        Username = name;
+        Password = pass;
     }
 
     // Methods
     public override string ToString()
     {
-        return "Username: " + userName + ". Role: " + EmployeeType.ToString();
+        return "Username: " + Username + ". Role: " + EmployeeType.ToString();
     }
 
     public override bool Equals(object obj)
@@ -61,7 +61,7 @@ public class User : IEquatable<User>
     }
     public override int GetHashCode()
     {
-        return UserId;
+        return UserID;
     }
 
     /// <summary>
@@ -73,7 +73,7 @@ public class User : IEquatable<User>
     public bool Equals(User other)
     {
         if (other == null) return false;
-        return (this.userName.Equals(other.userName) && this.password.Equals(other.password));
+        return (this.Username.Equals(other.Username) && this.Password.Equals(other.Password));
     }
     
 }
