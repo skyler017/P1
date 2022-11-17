@@ -1,5 +1,6 @@
 using RSTS.AppPI;
 using RSTS.DataInfrustructure;
+using RSTS.Userzone;
 
 Console.WriteLine("Hello, World!");
 string connectionstring = @"C:/Users/TOWER/Desktop/revrev/P1/RSTS.DataInfrustructure/RSTS.connectionstring";
@@ -55,6 +56,12 @@ app.MapGet("/weatherforecast", () =>
 //https://localhost:7152/ticketplease
 app.MapGet("/hedidnthavehisticket", () =>
     TicketRoll.GetAll());
+
+app.MapPost("/ticketplease", (Ticket t) =>
+{
+    t = TicketRoll.Create(t);
+    return Results.Created($"/ticketplease/{t.RequestID}", t);
+});
 
 //https://localhost:7152/ticket/1
 app.MapGet("/ticketplease/{id}", (int id) =>

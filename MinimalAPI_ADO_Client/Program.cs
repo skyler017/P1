@@ -38,6 +38,14 @@ class Program
             {
                 ShowTicket(t);
             }
+
+            Ticket icecream = new Ticket(2, 99, "ice cream");
+            Console.WriteLine("await ice cream");
+            var urlice = await CreateTicketAsync(icecream);
+            Console.WriteLine($"Created at {urlice}");
+            icecream = await GetTicketAsync(urlice.ToString());
+            ShowTicket(icecream);
+
             /*
             // Fetch all existing category records.
             var categories = await GetAllCategories();
