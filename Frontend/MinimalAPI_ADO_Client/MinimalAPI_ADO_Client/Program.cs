@@ -4,6 +4,12 @@ using System.Net;
 using System.Net.Http.Headers;
 using System.Net.Http.Json;
 
+// Running the following command in NuGet package manager console is
+// necessary to run this project:
+/// Install-Package Microsoft.AspNet.WebApi.Client
+// Alternatively, navigate NuGet to find the package.
+
+
 namespace MinimalAPI_ADO_Client;
 
 class Program
@@ -25,9 +31,10 @@ class Program
 
         try
         {
+            
             // Fetch all existing category records.
             var categories = await GetAllCategories();
-            foreach(var cate in categories)
+            foreach (var cate in categories)
             {
                 ShowCategory(cate);
             }
@@ -76,9 +83,52 @@ class Program
         }
 
         Console.ReadLine();
+        return;
+        try
+        {
+            do
+            {
+                ; // put state machine here
+                // The state machine helps the user navigate to through the system.
+                // This well help them fill out the variables needed by the system.
+                // All pages that should be hidden will require login information,
+                //      as such, preventing the simplest hack into the system.
+                // Page text will be kept server side. Pages for the client will be
+                //      built on a string sent from the server.
+                // Login variables will be sent with all pages, but not all server-side
+                //      pages need to check for login information.
+                //RequestNextPage(string? user, string? pass, int currentpage, string userinput);
+                // current page tell server what to do with user input
+                int nextpage = 333; // The server tells which page is next (helps sm navigate).
+                                    // It will be returned with
+                string pagetext = ""; // server sends this text
+                                      // The state machine will have to be server side?
+                                      // The exact page won't matter as long as login authorized
+                                      // The sssm will use current page to decide how to parse input
+                                      // The sssm tells client how many inputs it needs
+                                      // prompts tell client what to put in each input
+                                      // Current page/state is just the url, so sssm unecessary
+                                      // JSON from the client to server
+                                      //  {
+                                      //      "username": "user",
+                                      //      "password": "pass",
+                                      //      "currentpage": ##7, // just the url
+                                      //      "input": "1", // for option 1 - eg login
+                                      //          // so the input url is local/1
+                                      //          // but the received url is local/login
+                                      //          // or
+                                      //          // input local/2
+                                      //          // receive local/signup
+                                      //  }
+
+            } while (1 == 1);
+        }
+        catch (Exception e)
+        {
+            Console.WriteLine(e.Message);
+        }
     }
 
-    // Install-Package Microsoft.AspNet.WebApi.Client
     static void ShowCategory(Category category)
     {
         Console.WriteLine($"ID: {category.Categoryid}\t Name: {category.CategoryName}\t" +
@@ -136,4 +186,24 @@ class Program
         return response.StatusCode;
     }
 
+    static async Task<HttpStatusCode> LoginAsync(string username, string password)
+    { // copied from update
+        HttpResponseMessage response = await client.PutAsJsonAsync(
+            $"categories/{category.Categoryid}", category);
+        response.EnsureSuccessStatusCode();
+
+        // Deserialize the updated Category from the response body.
+        category = await response.Content.ReadAsAsync<Category>();
+        return category;
+    }
+
+    static async Task<HttpStatusCode> NoginAsync(string username, string password)
+    { // copied from create
+        HttpResponseMessage response = await client.PostAsJsonAsync(
+            "categories", category);
+    response.EnsureSuccessStatusCode();
+
+        // return URI of the created resource.
+        return response.Headers.Location;
+     }
 }
