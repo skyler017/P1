@@ -15,6 +15,7 @@ builder.Services.AddSwaggerGen();
 var connValue = File.ReadAllText(connectionstring);
 //var connValue = builder.Configuration.GetValue<string>("ConnectionString:NorthwindDB");
 TicketRepository TicketRoll = new TicketRepository(connValue);
+UserRepository UserRoll = new UserRepository(connValue);
 
 
 builder.Services.AddTransient<CategoryRepository>();
@@ -68,7 +69,40 @@ app.MapGet("/ticketplease/{id}", (int id) =>
     TicketRoll.Get(id));
 // End Tickets
 //=================================
+// Users start here
+app.MapPost("/signup", (User u) =>
+{
+    u = UserRoll.Get(u.Username, u.Password);
+    if(u.Username != null)
+    {
+        return Results.Conflict(u);
+    }
+    else
+    {
+        u = UserRoll.Create(u);
+        return Results.Created($"/user/{u.UserID}", u);
+    }
+});
 
+app.MapPost("/login", (User u) =>
+{
+    u = UserRoll.Get(u.Username, u.Password);
+    switch (u.EmployeeType)
+    {
+        case User.Role.Employee:
+            return Results.Content($"/user/{u.UserID}", u);
+            break;
+        case User.Role.Manager:
+            return Results.Content($"/manager/{u.UserID}", u);
+            break;
+        default:
+            Console.WriteLine("Error: Login error");
+            return Results.BadRequest(u);
+    }
+});
+
+// End Users
+// <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 //https://localhost:7152/categories/
 app.MapGet("/categories", (CategoryRepository repo) =>
     repo.GetAll(connValue));
@@ -86,7 +120,7 @@ app.MapGet("/categories/{id}", (int id, CategoryRepository repo) =>
 app.MapPost("/categories", (Category category, CategoryRepository repo) =>
 {
     category = repo.Create(connValue, category);
-    return Results.Created($"/categories/{category.Categoryid}", category);
+    
 });
 
 //https://localhost:7152/categories/14
