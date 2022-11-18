@@ -45,7 +45,10 @@ class Program
             Console.WriteLine($"Created at {urlice}");
             icecream = await GetTicketAsync(urlice.ToString());
             ShowTicket(icecream);
-
+            Console.WriteLine("Starting login tests");
+            User Dave = new User("Dave", "Buster");
+            var urlDave = await SignupAsync(Dave);
+            Console.WriteLine("signup result: " + urlDave);
             /*
             // Fetch all existing category records.
             var categories = await GetAllCategories();
@@ -147,6 +150,9 @@ class Program
 
     }
 
+
+    // >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+    // Start Category
     static void ShowCategory(Category category)
     {
         Console.WriteLine($"ID: {category.Categoryid}\t Name: {category.CategoryName}\t" +
@@ -203,6 +209,9 @@ class Program
             $"categories/{id}");
         return response.StatusCode;
     }
+    // End Category
+    //=================================
+    // Start Tickets
 
     static void ShowTicket(Ticket t)
     {
@@ -242,6 +251,32 @@ class Program
         }
         return t;
     }
+    // End Ticket
+    //======================================
+    // Start User
+    static async Task<Uri> SignupAsync(User u)
+    {
+        HttpResponseMessage response = await client.PostAsJsonAsync(
+            "signup", u);
+        if (response.IsSuccessStatusCode)
+        {
+            u = await response.Content.ReadAsAsync<User>();
+        }
+        else u = null;
+        return u;
+    }
+
+    static async Task<Uri> LoginAsync(User u)
+    {
+        HttpResponseMessage response = await client.PostAsJsonAsync(
+            "login", u);
+        response.EnsureSuccessStatusCode();
+
+        // return URI of the created resource.
+        return response.Headers.Location;
+    }
+    // End User
+    //<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
     /*
     static async Task<HttpStatusCode> LoginAsync(string username, string password)
     {
