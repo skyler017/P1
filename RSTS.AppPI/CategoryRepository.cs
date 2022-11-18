@@ -77,6 +77,7 @@ namespace RSTS.AppPI
                 int newId = Convert.ToInt32(cmd.ExecuteScalar());
                 category.Categoryid = newId;
                 cmd.Dispose();
+                Console.WriteLine("Repo ID: " + newId);
             }
             return category;
         }
