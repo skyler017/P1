@@ -32,7 +32,7 @@ class Program
 
         try
         {
-            // All tickets
+/*            // All tickets
             var tickets = await GetAllTickets();
             foreach (var t in tickets)
             {
@@ -44,19 +44,29 @@ class Program
             var urlice = await CreateTicketAsync(icecream);
             Console.WriteLine($"Created at {urlice}");
             icecream = await GetTicketAsync(urlice.ToString());
-            ShowTicket(icecream);
+            ShowTicket(icecream);*/
+
+            // User test
             Console.WriteLine("Starting login tests");
             User Dave = new User("Dave", "Buster");
+            Console.WriteLine(Dave);
             var urlDave = await SignupAsync(Dave);
             Console.WriteLine("signup result: " + urlDave);
-            /*
-            // Fetch all existing category records.
+            if (urlDave == null)
+            {
+                Console.WriteLine("Have to login");
+                urlDave = await LoginAsync(Dave);
+            }
+            
+
+            
+/*            // Fetch all existing category records.
             var categories = await GetAllCategories();
             foreach (var cate in categories)
             {
                 ShowCategory(cate);
             }
-            */
+            
             // Create a new Category
             Category category = new Category
             {
@@ -75,7 +85,7 @@ class Program
             Console.WriteLine(url.ToString());
             Console.WriteLine("Category record created. Please check in DB...");
             Console.WriteLine("Press <ENTER> to Update this record...");
-            Console.ReadLine();
+            Console.ReadLine();*/
             /*
             // Update the Category
             Console.WriteLine("Updating description...");
@@ -173,6 +183,7 @@ class Program
 
     static async Task<Uri> CreateCategoryAsync(Category category)
     {
+        Console.WriteLine(category);
         HttpResponseMessage response = await client.PostAsJsonAsync(
             "categories", category);
         response.EnsureSuccessStatusCode();
@@ -221,8 +232,8 @@ class Program
 
     static async Task<Uri> CreateTicketAsync(Ticket t)
     {
-        HttpResponseMessage response = await client.PostAsJsonAsync(
-            "ticketplease", t);
+        Console.WriteLine(t);
+        HttpResponseMessage response = await client.PostAsJsonAsync("ticketplease", t);
         response.EnsureSuccessStatusCode();
 
         // return URI of the created resource.
@@ -256,48 +267,31 @@ class Program
     // Start User
     static async Task<Uri> SignupAsync(User u)
     {
-        HttpResponseMessage response = await client.PostAsJsonAsync(
-            "signup", u);
+        HttpResponseMessage response = await client.PostAsJsonAsync("signup", u);
         if (response.IsSuccessStatusCode)
         {
             u = await response.Content.ReadAsAsync<User>();
         }
         else u = null;
-        return u;
+        return response.Headers.Location;
     }
 
     static async Task<Uri> LoginAsync(User u)
     {
         HttpResponseMessage response = await client.PostAsJsonAsync(
             "login", u);
-        response.EnsureSuccessStatusCode();
-
-        // return URI of the created resource.
-        return response.Headers.Location;
+        if (response.IsSuccessStatusCode)
+        {
+            Console.WriteLine("login success");
+            // return URI of the created resource.
+            return response.Headers.Location;
+        }
+        else
+        {
+            Console.WriteLine("Login failed");
+            return null;
+        }
     }
     // End User
     //<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
-    /*
-    static async Task<HttpStatusCode> LoginAsync(string username, string password)
-    {
-        // copied from update
-        HttpResponseMessage response = await client.PutAsJsonAsync(
-            $"categories/{category.Categoryid}", category);
-        response.EnsureSuccessStatusCode();
-
-        // Deserialize the updated Category from the response body.
-        category = await response.Content.ReadAsAsync<Category>();
-        return category;
-    }
-
-    static async Task<HttpStatusCode> NoginAsync(string username, string password)
-    { 
-        // copied from create
-        HttpResponseMessage response = await client.PostAsJsonAsync(
-            "categories", category);
-    response.EnsureSuccessStatusCode();
-
-        // return URI of the created resource.
-        return response.Headers.Location;
-    }*/
 }

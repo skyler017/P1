@@ -72,8 +72,11 @@ app.MapGet("/ticketplease/{id}", (int id) =>
 // Users start here
 app.MapPost("/signup", (User u) =>
 {
-    u = UserRoll.Get(u.Username, u.Password);
-    if(u.Username != null)
+    Console.WriteLine("...Within Signup API with...");
+    Console.WriteLine(u);
+    User checker = UserRoll.Get(u.Username, u.Password);
+    Console.WriteLine(u);
+    if (checker.Username != null)
     {
         return Results.Conflict(u);
     }
@@ -86,14 +89,19 @@ app.MapPost("/signup", (User u) =>
 
 app.MapPost("/login", (User u) =>
 {
+    Console.WriteLine("...Within Login API...");
+    Console.WriteLine(u);
     u = UserRoll.Get(u.Username, u.Password);
+    Console.WriteLine(u);
     switch (u.EmployeeType)
     {
         case User.Role.Employee:
-            return Results.Content($"/user/{u.UserID}", u);
+            Console.WriteLine("signin employee");
+            return Results.Created($"/user/{u.UserID}", u);
             break;
         case User.Role.Manager:
-            return Results.Content($"/manager/{u.UserID}", u);
+            Console.WriteLine("signin manager");
+            return Results.Created($"/manager/{u.UserID}", u);
             break;
         default:
             Console.WriteLine("Error: Login error");
@@ -103,6 +111,7 @@ app.MapPost("/login", (User u) =>
 
 // End Users
 // <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+// Start Category
 //https://localhost:7152/categories/
 app.MapGet("/categories", (CategoryRepository repo) =>
     repo.GetAll(connValue));
@@ -119,8 +128,9 @@ app.MapGet("/categories/{id}", (int id, CategoryRepository repo) =>
 //}
 app.MapPost("/categories", (Category category, CategoryRepository repo) =>
 {
+    Console.WriteLine(">>>>" + category);
     category = repo.Create(connValue, category);
-    
+    return Results.Created($"/categories/{category.Categoryid}", category);
 });
 
 //https://localhost:7152/categories/14
