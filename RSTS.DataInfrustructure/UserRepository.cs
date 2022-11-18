@@ -47,6 +47,36 @@ public class UserRepository
         return AllUsers;
     }
 
+    public User Get(string username, string password)
+    {
+        using SqlConnection connection = new SqlConnection(_connectionstring);
+        connection.Open();
+
+        // retrieve a ticket from the db
+        StringBuilder cmdText = new StringBuilder();
+        cmdText.Append(" SELECT ");
+        cmdText.Append(" UserID, Username, Password, EmployeeType ");
+        cmdText.Append(" FROM RSTS.Users ");
+        cmdText.Append(" WHERE Username = @user AND Password = @pass ");
+        using SqlCommand cmd = new SqlCommand(cmdText.ToString(), connection);
+        cmd.Parameters.AddWithValue("@user", username);
+        cmd.Parameters.AddWithValue("@pass", password);
+        using SqlDataReader reader = cmd.ExecuteReader();
+
+        // Parse the returned data table
+        User u = new User();
+        while (reader.Read())
+        {
+            u.UserID = Int32.Parse(reader["UserID"].ToString());
+            u.Username = reader["Username"].ToString();
+            u.Password = reader["Password"].ToString();
+            u.EmployeeType = (User.Role)Int32.Parse(reader["EmployeeType"].ToString());
+        }
+        reader.Close();
+        cmd.Dispose();
+
+        return u;
+    }
 
     public User Get(int searchid)
     {
