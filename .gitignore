@@ -22,7 +22,7 @@ RSTS.connectionstring
 *.userosscache
 *.sln.docstates
 */.vscode/*
-*.vs
+*.vs*
 
 # User-specific files (MonoDevelop/Xamarin Studio)
 *.userprefs
