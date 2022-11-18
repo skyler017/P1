@@ -115,11 +115,10 @@ public class UserRepository
 
         // Add ticket to db
         StringBuilder cmdText = new StringBuilder();
-        cmdText.Append(" INSERT INTO ");
-        cmdText.Append(" RSTS.Users ");
-        cmdText.Append(" VALUES ");
+        cmdText.Append(" INSERT INTO RSTS.Users ");
         cmdText.Append(" (Username, Password, EmployeeType) ");
-        cmdText.Append(" (@username,@password,@etype); ");
+        cmdText.Append(" VALUES ");
+        cmdText.Append(" (@username, @password, @etype); ");
         cmdText.Append(" SELECT @@IDENTITY;");
         using SqlCommand cmd = new SqlCommand(cmdText.ToString(), connection);
         cmd.Parameters.AddWithValue("@username", u.Username);
