@@ -91,7 +91,9 @@ public class TicketRepository
 
         // Add ticket to db
         string cmdText =
-            @"INSERT INTO RSTS.Tickets(AuthorID, Amount, Message, RequestDate, ApprovalStatus) " +
+            @"INSERT INTO " +
+            "RSTS.Tickets " +
+            "(AuthorID, Amount, Message, RequestDate, ApprovalStatus) " +
                 "VALUES " +
                 "(@UID,@amount,@message,SYSUTCDATETIME(),@approval); " +
                 "SELECT @@IDENTITY;";
