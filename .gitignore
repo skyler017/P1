@@ -23,6 +23,8 @@ RSTS.connectionstring
 *.sln.docstates
 */.vscode/*
 *.vs*
+.filenesting.json
+.editorconfig
 
 # User-specific files (MonoDevelop/Xamarin Studio)
 *.userprefs
