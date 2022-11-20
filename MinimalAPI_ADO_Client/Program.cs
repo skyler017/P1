@@ -3,6 +3,8 @@ using System.IO;
 using System.Net;
 using System.Net.Http.Headers;
 using System.Net.Http.Json;
+using Interface;
+using System.Text;
 using RSTS.Userzone;
 
 // Running the following command in NuGet package manager console is
@@ -16,6 +18,23 @@ namespace MinimalAPI_ADO_Client;
 class Program
 {
     static HttpClient client = new HttpClient();
+
+    private enum Page
+    {
+        OPEN = 0
+        , SIGNU_E, SIGNU_A, SIGNU_P, SIGNU_V // Signup for an account - E_mail, A_vailable, P_assword, V_alidate
+        , LOGIN_E,          LOGIN_P, LOGIN_V // Login to existing account
+        , WELCOME, LAND_EM, LAND_MN
+        , EVW_TKT, EFT_TKT, CRT_TKT // Employee side: view, filter, create
+        , MVW_TKT, MFT_TKT, APV_TKT // Manager side: view, filter, approve
+    }
+    private enum CMD
+    {
+        NIL = -1
+        , OPT1 = 1, OPT2 = 2, OPT3 = 3, OPT4 = 4 /**/, OPT9 = 9
+        , FORW, BACK, FAIL, RETRY
+    };
+
 
     static void Main()
     {
@@ -32,8 +51,24 @@ class Program
 
         try
         {
-/*            // All tickets
-            var tickets = await GetAllTickets();
+            // User test
+            /*            Console.WriteLine("Starting login tests");
+                        User Dave = new User("Dave", "Buster");
+                        Console.WriteLine(Dave);
+                        var urlDave = await SignupAsync(Dave);
+                        Console.WriteLine("signup result: " + urlDave);
+                        if (urlDave == null)
+                        {
+                            Console.WriteLine("Have to login");
+                            urlDave = await LoginAsync(Dave);
+                        }*/
+
+            // Manager test
+            /*User BigR = new User("R@hotmail", "kitty");
+            var urlBigR = await LoginAsync(BigR);*/
+
+            // All tickets
+            /*var tickets = await GetAllTickets();
             foreach (var t in tickets)
             {
                 ShowTicket(t);
@@ -46,27 +81,14 @@ class Program
             icecream = await GetTicketAsync(urlice.ToString());
             ShowTicket(icecream);*/
 
-            // User test
-            Console.WriteLine("Starting login tests");
-            User Dave = new User("Dave", "Buster");
-            Console.WriteLine(Dave);
-            var urlDave = await SignupAsync(Dave);
-            Console.WriteLine("signup result: " + urlDave);
-            if (urlDave == null)
-            {
-                Console.WriteLine("Have to login");
-                urlDave = await LoginAsync(Dave);
-            }
-            
 
-            
-/*            // Fetch all existing category records.
-            var categories = await GetAllCategories();
+            // Fetch all existing category records.
+            /*var categories = await GetAllCategories();
             foreach (var cate in categories)
             {
                 ShowCategory(cate);
             }
-            
+
             // Create a new Category
             Category category = new Category
             {
@@ -86,9 +108,9 @@ class Program
             Console.WriteLine("Category record created. Please check in DB...");
             Console.WriteLine("Press <ENTER> to Update this record...");
             Console.ReadLine();*/
-            /*
+            
             // Update the Category
-            Console.WriteLine("Updating description...");
+            /*Console.WriteLine("Updating description...");
             category.Description = "Demo 1 changed.";
             await UpdateCategoryAsync(category);
 
@@ -113,115 +135,407 @@ class Program
         }
 
         Console.ReadLine();
-        return;
-        /*try
-        {
-            do
-            {
-                ; // put state machine here
-                // The state machine helps the user navigate to through the system.
-                // This well help them fill out the variables needed by the system.
-                // All pages that should be hidden will require login information,
-                //      as such, preventing the simplest hack into the system.
-                // Page text will be kept server side. Pages for the client will be
-                //      built on a string sent from the server.
-                // Login variables will be sent with all pages, but not all server-side
-                //      pages need to check for login information.
-                //RequestNextPage(string? user, string? pass, int currentpage, string userinput);
-                // current page tell server what to do with user input
-                int nextpage = 333; // The server tells which page is next (helps sm navigate).
-                                    // It will be returned with
-                string pagetext = ""; // server sends this text
-                                      // The state machine will have to be server side?
-                                      // The exact page won't matter as long as login authorized
-                                      // The sssm will use current page to decide how to parse input
-                                      // The sssm tells client how many inputs it needs
-                                      // prompts tell client what to put in each input
-                                      // Current page/state is just the url, so sssm unecessary
-                                      // JSON from the client to server
-                                      //  {
-                                      //      "username": "user",
-                                      //      "password": "pass",
-                                      //      "currentpage": ##7, // just the url
-                                      //      "input": "1", // for option 1 - eg login
-                                      //          // so the input url is local/1
-                                      //          // but the received url is local/login
-                                      //          // or
-                                      //          // input local/2
-                                      //          // receive local/signup
-                                      //  }
 
-            } while (1 == 1);
+        try
+        {
+            Page Bookmark = Page.OPEN;
+            CMD Orders;
+            User employee = new User();
+            string GivenUsername = "";
+            string GivenPassword = "";
+            //string webpath = "";
+
+            while (1 == 1)
+            {
+                Orders = CMD.NIL;
+                switch (Bookmark)
+                {
+                    case Page.OPEN:
+                        OPEN_WelcomeText();
+                        Orders = OPEN_ProcessInput();
+                        switch (Orders)
+                        {
+                            case CMD.OPT1: // Existing User
+                                Bookmark = Page.LOGIN_E;
+                                break;
+                            case CMD.OPT2: // New User
+                                Bookmark = Page.SIGNU_E;
+                                break;
+                            case CMD.RETRY: // input error
+                                continue;
+                            default:
+                                NESTED_DEFAULT_ERROR(Bookmark, Orders);
+                                return;
+                        }
+                        break;
+
+                    case Page.SIGNU_E:
+                        SIGNU_E_Prompt();
+                        Orders = LOGIN_E_ProcessInput(out GivenUsername); // LOGIN is used rather than SIGNU because it still works
+                        switch (Orders)
+                        {
+                            case CMD.OPT9: // Go back
+                            case CMD.BACK:
+                                Bookmark = Page.OPEN;
+                                break;
+                            case CMD.FORW: // Email is formatted correctly
+                                Bookmark = Page.SIGNU_A;
+                                break;
+                            case CMD.RETRY: // Input error
+                                continue;
+                            default:
+                                NESTED_DEFAULT_ERROR(Bookmark, Orders);
+                                return;
+                        }
+                        break;
+
+                    case Page.SIGNU_A:
+                        Orders = SIGNU_A_ProcessUsername(GivenUsername);
+                        switch(Orders)
+                        {
+                            case CMD.FORW: // name is available
+                                Bookmark = Page.SIGNU_P;
+                                break;
+                            case CMD.RETRY: // name is taken
+                                Bookmark = Page.SIGNU_E;
+                                break;
+                            default:
+                                NESTED_DEFAULT_ERROR(Bookmark, Orders);
+                                break;
+                        }
+                        break;
+
+                    case Page.SIGNU_P:
+                        SIGNU_P_Prompt();
+                        Orders = LOGIN_P_ProcessInput(out GivenPassword); // LOGIN is used rather than SIGNU because it still works
+                        switch (Orders)
+                        {
+                            case CMD.OPT9: // Go back
+                            case CMD.BACK:
+                                Bookmark = Page.OPEN;
+                                continue;
+                            case CMD.FORW: // Password acceptable
+                                Bookmark = Page.SIGNU_V;
+                                break;
+                            case CMD.FAIL: // Something about the password is bad
+                                Bookmark = Page.SIGNU_P;
+                                break;
+                            default:
+                                NESTED_DEFAULT_ERROR(Bookmark, Orders);
+                                break;
+                        }
+                        break;
+
+                    case Page.SIGNU_V:
+                        Orders = SIGNU_V_ValidateLogin(GivenUsername, GivenPassword, out employee);
+                        switch (Orders)
+                        {
+                            case CMD.FORW: // Account creation successful
+                                if (employee == null) return;
+                                Bookmark = Page.WELCOME;
+                                break;
+                            case CMD.FAIL: // Could not create account for some reason
+                                Bookmark = Page.OPEN;
+                                break;
+                            default:
+                                NESTED_DEFAULT_ERROR(Bookmark, Orders);
+                                return;
+                        }
+                        break;
+
+                    case Page.LOGIN_E:
+                        LOGIN_E_Prompt();
+                        Orders = LOGIN_E_ProcessInput(out GivenUsername);
+                        switch (Orders)
+                        {
+                            case CMD.OPT9: // Go back
+                            case CMD.BACK:
+                                Bookmark = Page.OPEN;
+                                break;
+                            case CMD.FORW: // Email received
+                                Bookmark = Page.LOGIN_P;
+                                break;
+                            //case CMD.RETRY: // Input error
+                                //continue;
+                            default:
+                                NESTED_DEFAULT_ERROR(Bookmark, Orders);
+                                return;
+                        }
+                        break;
+
+                    case Page.LOGIN_P:
+                        LOGIN_P_Prompt();
+                        Orders = LOGIN_P_ProcessInput(out GivenPassword);
+                        switch (Orders)
+                        {
+                            case CMD.OPT9: // Go back
+                            case CMD.BACK:
+                                Bookmark = Page.LOGIN_E;
+                                continue;
+                            case CMD.FORW: // Password received
+                                Bookmark = Page.LOGIN_V;
+                                break;
+                            //case CMD.FAIL: // Something about the password is bad
+                            //    Bookmark = Page.LOGIN_E;
+                            //    break;
+                            default:
+                                NESTED_DEFAULT_ERROR(Bookmark, Orders);
+                                break;
+                        }
+                        break;
+
+                    case Page.LOGIN_V:
+                        Orders = LOGIN_V_ValidateLogin(GivenUsername, GivenPassword, out employee);
+                        switch (Orders)
+                        {
+                            case CMD.FORW: // Login successful
+                                Bookmark = Page.WELCOME;
+                                break;
+                            case CMD.FAIL: // Credentials not found
+                                Bookmark = Page.LOGIN_E;
+                                break;
+                            default:
+                                NESTED_DEFAULT_ERROR(Bookmark, Orders);
+                                return;
+                        }
+                        break;
+
+                    case Page.WELCOME:
+                        if (employee == null)
+                        {
+                            Console.WriteLine("Employee Token should not be null");
+                            return;
+                        }
+                        else
+                        {
+                            //Console.WriteLine(employee);
+                            switch(employee.EmployeeType)
+                            {
+                                case User.Role.Employee:
+                                    Bookmark = Page.LAND_EM;
+                                    break;
+                                case User.Role.Manager:
+                                    Bookmark = Page.LAND_MN;
+                                    break;
+                                default:
+                                    NESTED_DEFAULT_ERROR(Bookmark, CMD.OPT1);
+                                    return;
+                            }
+                        }
+                        break;
+
+                    case Page.LAND_EM:
+                        LANDING_Employee_WelcomeText(employee);
+                        Bookmark = Page.OPEN;
+                        break;
+                    case Page.LAND_MN:
+                        LANDING_Manager_WelcomeText(employee);
+                        Bookmark = Page.OPEN;
+                        break;
+                    default:
+                        PageDoesNotExist(Bookmark);
+                        return;
+                }
+            }
+            // The state machine helps the user navigate to through the system.
+            // This well help them fill out the variables needed by the system.
+            // All pages that should be hidden will require login information,
+            //      as such, preventing the simplest hack into the system.
+
         }
         catch (Exception e)
         {
             Console.WriteLine(e.Message);
-        }*/
-
-    }
-
-
-    // >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
-    // Start Category
-    static void ShowCategory(Category category)
-    {
-        Console.WriteLine($"ID: {category.Categoryid}\t Name: {category.CategoryName}\t" +
-            $"Description: {category.Description}");
-    }
-
-    static async Task<List<Category>> GetAllCategories()
-    {
-        List<Category> categories = new List<Category>();
-        var path = "categories";
-        HttpResponseMessage response = await client.GetAsync(path);
-        if (response.IsSuccessStatusCode)
-        {
-            categories = await response.Content.ReadAsAsync<List<Category>>();
         }
-        return categories;
+
     }
 
-    static async Task<Uri> CreateCategoryAsync(Category category)
-    {
-        Console.WriteLine(category);
-        HttpResponseMessage response = await client.PostAsJsonAsync(
-            "categories", category);
-        response.EnsureSuccessStatusCode();
 
-        // return URI of the created resource.
-        return response.Headers.Location;
-    }
+    // >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+    ///// Shared Page resources /////
+    private static readonly string NineToGoHome = "You can press 9 and 'enter' to go back.";
 
-    static async Task<Category> GetCategoryAsync(string path)
+    private static int CheckForValidNumerical(string input, int[] valids)
     {
-        Category category = null;
-        HttpResponseMessage response = await client.GetAsync(path);
-        if (response.IsSuccessStatusCode)
+        int userInputNum;
+        //if (string.IsNullOrEmpty(input)) return -1;
+        //else 
+        if (Int32.TryParse(input, out userInputNum))
         {
-            category = await response.Content.ReadAsAsync<Category>();
+            if (valids.Contains(userInputNum)) return userInputNum;
+            else return -1;
         }
-        return category;
+        return -1;
     }
 
-    static async Task<Category> UpdateCategoryAsync(Category category)
+    ///// Pages and Processing /////
+
+    private static void OPEN_WelcomeText()
     {
-        HttpResponseMessage response = await client.PutAsJsonAsync(
-            $"categories/{category.Categoryid}", category);
-        response.EnsureSuccessStatusCode();
-
-        // Deserialize the updated Category from the response body.
-        category = await response.Content.ReadAsAsync<Category>();
-        return category;
+        StringBuilder sb = new StringBuilder();
+        sb.AppendLine("Welcome to ERS Ticketing.");
+        sb.AppendLine("Please make a selection (type the corresponding # and press 'enter').");
+        sb.AppendLine("1.Login");
+        sb.AppendLine("2.Sign-up");
+        IInput page = new ConsoleBased();
+        page.DisplayPage(new string[] { sb.ToString() });
     }
-
-    static async Task<HttpStatusCode> DeleteCategoryAsync(long id)
+    private static CMD OPEN_ProcessInput()
     {
-        HttpResponseMessage response = await client.DeleteAsync(
-            $"categories/{id}");
-        return response.StatusCode;
+        IInput consoleBased = new ConsoleBased();
+
+        // Fetch the user's input string and ensure it is a 1 or 2
+        string userInputMessage = consoleBased.GetUserInput();
+        int userInputNum = CheckForValidNumerical(userInputMessage, new int[] { 1, 2 });
+        if (userInputNum > 0) return (CMD)userInputNum;
+        consoleBased.DisplayPage(new string[] { "Please enter a number from the selection." });
+        return CMD.RETRY;
     }
-    // End Category
-    //=================================
+
+    private static void SIGNU_E_Prompt()
+    {
+        StringBuilder sb = new StringBuilder();
+        sb.AppendLine("Preparing to create your account");
+        sb.AppendLine("Please type in your full email (eg: name@demo.com) and press 'enter'.");
+        sb.AppendLine(NineToGoHome);
+        IInput page = new ConsoleBased();
+        page.DisplayPage(new string[] { sb.ToString() });
+    }
+    private static CMD SIGNU_A_ProcessUsername(string username)
+    {
+        Console.WriteLine("looking for user " + username);
+        var taken = CheckNameAsync(username);
+        if (taken.Result) return CMD.FORW;
+        ConsoleBased cB = new();
+        cB.DisplayPage(new string[] { "That username is taken; you must use another." });
+        return CMD.RETRY;
+    }
+    private static void SIGNU_P_Prompt()
+    {
+        StringBuilder sb = new StringBuilder();
+        sb.AppendLine("Preparing to create your account");
+        sb.AppendLine("Please type in your password (eg: password) and press 'enter'.");
+        sb.AppendLine(NineToGoHome);
+        IInput page = new ConsoleBased();
+        page.DisplayPage(new string[] { sb.ToString() });
+    }
+    private static CMD SIGNU_V_ValidateLogin(string username, string password, out User token)
+    {
+        Task<User> task = SignupAsync(new User(username, password));
+        token = task.Result;
+        if(task == null || token == null) return CMD.FAIL;
+        return CMD.FORW;
+    }
+
+    private static void LOGIN_E_Prompt()
+    {
+        StringBuilder sb = new StringBuilder();
+        sb.AppendLine("Preparing to log you in");
+        sb.AppendLine("Please type in your full email (eg: name@demo.com) and press 'enter'.");
+        sb.AppendLine(NineToGoHome);
+        IInput page = new ConsoleBased();
+        page.DisplayPage(new string[] { sb.ToString() });
+    }
+    private static CMD LOGIN_E_ProcessInput(out string email)
+    {
+        email = "";
+        IInput cB = new ConsoleBased();
+
+        // Fetch the user's input string
+        string userInputMessage = cB.GetUserInput();
+
+        // check for 9
+        int userInputNum = CheckForValidNumerical(userInputMessage, new int[] { 9 });
+        if (userInputNum == 9) return CMD.BACK;
+
+        // must be an email if its made it here
+        email = userInputMessage;
+        return CMD.FORW;
+    }
+    private static void LOGIN_P_Prompt()
+    {
+        StringBuilder sb = new StringBuilder();
+        sb.AppendLine("Preparing to log you in");
+        sb.AppendLine("Please type in your password (eg: password) and press 'enter'.");
+        sb.AppendLine(NineToGoHome);
+        IInput page = new ConsoleBased();
+        page.DisplayPage(new string[] { sb.ToString() });
+    }
+    private static CMD LOGIN_P_ProcessInput(out string password)
+    {
+        password = "";
+
+        // Fetch the user's input string
+        IInput cB = new ConsoleBased();
+        string userInputMessage = cB.GetUserInput();
+
+        // check for 9
+        int userInputNum = CheckForValidNumerical(userInputMessage, new int[] { 9 });
+        if (userInputNum == 9) return CMD.BACK;
+
+        // the string must be a password
+        password = userInputMessage;
+        return CMD.FORW;
+    }
+
+    private static CMD LOGIN_V_ValidateLogin(string username, string password, out User token)
+    {
+        Task<User> task = LoginAsync(new User(username, password));
+        token = task.Result;
+        //Console.WriteLine(token);
+        if (task == null || token == null) return CMD.FAIL;
+        return CMD.FORW;
+    }
+
+    private static void LANDING_Manager_WelcomeText(User manager)
+    {
+        StringBuilder sb = new StringBuilder();
+        sb.AppendLine($"Welcome back {manager.Username}.");
+        sb.AppendLine("Please make a selection (type the corresponding # and press 'enter'.");
+        sb.AppendLine("1.Check tickets");
+        sb.AppendLine("2.Register employees as managers");
+        IInput page = new ConsoleBased();
+        page.DisplayPage(new string[] { sb.ToString() });
+    }
+    private static void LANDING_Manager_ViewTickets(User Dave/*, filter method*/)
+    {
+        StringBuilder sb = new StringBuilder();
+        sb.AppendLine("Now displaying reimbursments:");
+        // sb.AppendLine(call function that gets all the approved tickets)
+        sb.AppendLine("Please make a selection (type the corresponding # and press 'enter'.");
+        sb.AppendLine("1.Find a subset of tickets");
+        sb.AppendLine("2.Approve pending tickets");
+        IInput page = new ConsoleBased();
+        page.DisplayPage(new string[] { sb.ToString() });
+    }
+
+    private static void LANDING_Employee_WelcomeText(User employee)
+    {
+        StringBuilder sb = new StringBuilder();
+        sb.AppendLine($"Welcome {employee.Username}.");
+        sb.AppendLine("Now displaying reimbursments:");
+        // sb.AppendLine(call function that gets all the approved tickets)
+        sb.AppendLine("Please make a selection (type the corresponding # and press 'enter'.");
+        sb.AppendLine("1.Find a subset of tickets");
+        sb.AppendLine("2.Approve pending tickets");
+        IInput page = new ConsoleBased();
+        page.DisplayPage(new string[] { sb.ToString() });
+    }
+
+    private static void PageDoesNotExist(Page which)
+    {
+        IInput page = new ConsoleBased();
+        page.DisplayPage(new string[] { "The requested page does not exist: " + which });
+    }
+
+    private static void NESTED_DEFAULT_ERROR(Page where, CMD why)
+    {
+        IInput page = new ConsoleBased();
+        page.DisplayPage(new string[] { $"Error on Page {where} due to Command {why}.\nExiting Program" });
+    }
+
+    //======================================
+    ///// API Interaction /////
     // Start Tickets
 
     static void ShowTicket(Ticket t)
@@ -240,11 +554,13 @@ class Program
         return response.Headers.Location;
     }
 
+    //static async Task<List<Ticket>> GetAllTicketsAsync(string userpath, User u)
     static async Task<List<Ticket>> GetAllTickets()
     {
         List<Ticket> TicketList = new List<Ticket>();
         var path = "hedidnthavehisticket";
         HttpResponseMessage response = await client.GetAsync(path);
+        //HttpResponseMessage response = await client.PostAsJsonAsync(userpath, u);
         if (response.IsSuccessStatusCode)
         {
             TicketList = await response.Content.ReadAsAsync<List<Ticket>>();
@@ -265,32 +581,48 @@ class Program
     // End Ticket
     //======================================
     // Start User
-    static async Task<Uri> SignupAsync(User u)
+    static async Task<User> SignupAsync(User u)
     {
         HttpResponseMessage response = await client.PostAsJsonAsync("signup", u);
+        //Console.WriteLine(">>>asignup<<<"+response);
         if (response.IsSuccessStatusCode)
         {
             u = await response.Content.ReadAsAsync<User>();
         }
         else u = null;
-        return response.Headers.Location;
+        return u; // response.Headers.Location; // "/user./{id}"
     }
 
-    static async Task<Uri> LoginAsync(User u)
+    static async Task<User> LoginAsync(User u)
     {
-        HttpResponseMessage response = await client.PostAsJsonAsync(
-            "login", u);
+        HttpResponseMessage response = await client.PostAsJsonAsync("login", u);
+        //Console.WriteLine(">>>alogin<<<" + response);
         if (response.IsSuccessStatusCode)
         {
             Console.WriteLine("login success");
+            u = await response.Content.ReadAsAsync<User>();
+
             // return URI of the created resource.
-            return response.Headers.Location;
+            //return response.Headers.Location; // "/user./{id}"
         }
         else
         {
             Console.WriteLine("Login failed");
-            return null;
+            u = null;
+            //return u;
         }
+        return u;
+    }
+
+    static async Task<bool> CheckNameAsync(string username)
+    {
+        //Console.WriteLine("checking on " + username);
+        HttpResponseMessage response = await client.PostAsJsonAsync("check", new User ( username, null));
+        //Console.WriteLine(response);
+        if (response.IsSuccessStatusCode)
+            return true;
+        else
+            return false;
     }
     // End User
     //<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<

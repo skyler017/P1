@@ -6,10 +6,15 @@ MinimumVisualStudioVersion = 10.0.40219.1
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "RSTS.DataInfrustructure", "RSTS.DataInfrustructure\RSTS.DataInfrustructure.csproj", "{4E668FF7-2D11-49EB-99CE-E50883CD2949}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{D8D7B405-2BB1-4237-B529-1293A8C1EDBD}"
+	ProjectSection(SolutionItems) = preProject
+		.editorconfig = .editorconfig
+	EndProjectSection
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "RSTS.AppPI", "RSTS.AppPI\RSTS.AppPI.csproj", "{A7DD9616-9E19-49C8-A27A-AE44A0B305AE}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "RSTS.Userzone", "RSTS.Userzone\RSTS.Userzone.csproj", "{3AE44367-2C9C-4FFF-B510-9BE684681A56}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RSTS.Business", "RSTS.Business\RSTS.Business.csproj", "{E4867BEC-DFB9-4D7D-BEAB-8A89A7D49057}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -57,6 +62,18 @@ Global
 		{3AE44367-2C9C-4FFF-B510-9BE684681A56}.Release|x64.Build.0 = Release|Any CPU
 		{3AE44367-2C9C-4FFF-B510-9BE684681A56}.Release|x86.ActiveCfg = Release|Any CPU
 		{3AE44367-2C9C-4FFF-B510-9BE684681A56}.Release|x86.Build.0 = Release|Any CPU
+		{E4867BEC-DFB9-4D7D-BEAB-8A89A7D49057}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{E4867BEC-DFB9-4D7D-BEAB-8A89A7D49057}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{E4867BEC-DFB9-4D7D-BEAB-8A89A7D49057}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{E4867BEC-DFB9-4D7D-BEAB-8A89A7D49057}.Debug|x64.Build.0 = Debug|Any CPU
+		{E4867BEC-DFB9-4D7D-BEAB-8A89A7D49057}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{E4867BEC-DFB9-4D7D-BEAB-8A89A7D49057}.Debug|x86.Build.0 = Debug|Any CPU
+		{E4867BEC-DFB9-4D7D-BEAB-8A89A7D49057}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{E4867BEC-DFB9-4D7D-BEAB-8A89A7D49057}.Release|Any CPU.Build.0 = Release|Any CPU
+		{E4867BEC-DFB9-4D7D-BEAB-8A89A7D49057}.Release|x64.ActiveCfg = Release|Any CPU
+		{E4867BEC-DFB9-4D7D-BEAB-8A89A7D49057}.Release|x64.Build.0 = Release|Any CPU
+		{E4867BEC-DFB9-4D7D-BEAB-8A89A7D49057}.Release|x86.ActiveCfg = Release|Any CPU
+		{E4867BEC-DFB9-4D7D-BEAB-8A89A7D49057}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

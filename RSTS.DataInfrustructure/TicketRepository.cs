@@ -12,7 +12,7 @@ namespace RSTS.DataInfrustructure;
 
 
 // CRUD operations on the Ticket object and the db
-public class TicketRepository
+public class TicketRepository : ITicketRepository
 {
     private readonly string _connectionstring;
 
@@ -21,7 +21,7 @@ public class TicketRepository
         _connectionstring = connectionstring;
     }
 
-    public List<Ticket> GetAll()
+/*    public List<Ticket> GetAll()
     {
         using SqlConnection connection = new SqlConnection(_connectionstring);
         connection.Open();
@@ -36,13 +36,15 @@ public class TicketRepository
         List<Ticket> AllTickets = new List<Ticket>();
         while (reader.Read())
         {
-            Ticket t = new Ticket();
-            t.RequestID = Int32.Parse(reader["RequestID"].ToString());
-            t.AuthorID = Int32.Parse(reader["AuthorID"].ToString());
-            t.Amount = Int32.Parse(reader["Amount"].ToString());
-            t.Message = reader["Message"].ToString();
-            t.RequestDate = DateTime.Parse(reader["RequestDate"].ToString());
-            t.Status = (Ticket.Approval)Int32.Parse(reader["ApprovalStatus"].ToString());
+            Ticket t = new Ticket
+            {
+                RequestID = Int32.Parse(reader["RequestID"].ToString()),
+                AuthorID = Int32.Parse(reader["AuthorID"].ToString()),
+                Amount = Int32.Parse(reader["Amount"].ToString()),
+                Message = reader["Message"].ToString(),
+                RequestDate = DateTime.Parse(reader["RequestDate"].ToString()),
+                Status = (Ticket.Approval)Int32.Parse(reader["ApprovalStatus"].ToString())
+            };
 
             AllTickets.Add(t);
         }
@@ -50,7 +52,103 @@ public class TicketRepository
         cmd.Dispose();
         return AllTickets;
     }
+*/
+    
+    public List<Ticket> GetAll(int? authorid)
+    {
+        List<Ticket> AllTickets = new List<Ticket>();
 
+        using SqlConnection connection = new SqlConnection(_connectionstring);
+        connection.Open();
+        
+
+        StringBuilder cmdText = new StringBuilder();
+        cmdText.Append(" SELECT ");
+        cmdText.Append(" RequestID, AuthorID, Amount, Message, RequestDate, ApprovalStatus ");
+        cmdText.Append(" FROM RSTS.Tickets ");
+        if (authorid == null) // if no author id was provided
+        {
+            using SqlCommand cmd = new SqlCommand(cmdText.ToString(), connection);
+            using SqlDataReader reader = cmd.ExecuteReader();
+
+            while (reader.Read())
+            {
+                Ticket t = new Ticket
+                {
+                    RequestID = Int32.Parse(reader["RequestID"].ToString()),
+                    AuthorID = Int32.Parse(reader["AuthorID"].ToString()),
+                    Amount = Int32.Parse(reader["Amount"].ToString()),
+                    Message = reader["Message"].ToString(),
+                    RequestDate = DateTime.Parse(reader["RequestDate"].ToString()),
+                    Status = (Ticket.Approval)Int32.Parse(reader["ApprovalStatus"].ToString())
+                };
+
+                AllTickets.Add(t);
+            }
+            reader.Close();
+            cmd.Dispose();
+        }
+        else
+        { // if there was an author id provided
+            cmdText.Append(" WHERE AuthorID = @AID ");
+            using SqlCommand cmd = new SqlCommand(cmdText.ToString(), connection);
+            cmd.Parameters.AddWithValue("@AID", authorid);
+            using SqlDataReader reader = cmd.ExecuteReader();
+
+            while (reader.Read())
+            {
+                Ticket t = new Ticket
+                {
+                    RequestID = Int32.Parse(reader["RequestID"].ToString()),
+                    AuthorID = Int32.Parse(reader["AuthorID"].ToString()),
+                    Amount = Int32.Parse(reader["Amount"].ToString()),
+                    Message = reader["Message"].ToString(),
+                    RequestDate = DateTime.Parse(reader["RequestDate"].ToString()),
+                    Status = (Ticket.Approval)Int32.Parse(reader["ApprovalStatus"].ToString())
+                };
+
+                AllTickets.Add(t);
+            }
+            reader.Close();
+            cmd.Dispose();
+        }
+
+        return AllTickets;
+    }
+
+    public List<Ticket> GetAllOnApproved(bool approval)
+    {
+        using SqlConnection connection = new SqlConnection(_connectionstring);
+        connection.Open();
+
+        StringBuilder cmdText = new StringBuilder();
+        cmdText.Append(" SELECT ");
+        cmdText.Append(" RequestID, AuthorID, Amount, Message, RequestDate, ApprovalStatus ");
+        cmdText.Append(" FROM RSTS.Tickets ");
+        cmdText.Append(" WHERE ApprovalStatus = @AST ");
+        using SqlCommand cmd = new SqlCommand(cmdText.ToString(), connection);
+        cmd.Parameters.AddWithValue("@AST", approval?1:0);
+        using SqlDataReader reader = cmd.ExecuteReader();
+
+        List<Ticket> AllTickets = new List<Ticket>();
+        while (reader.Read())
+        {
+            Ticket t = new Ticket
+            {
+                RequestID = Int32.Parse(reader["RequestID"].ToString()),
+                AuthorID = Int32.Parse(reader["AuthorID"].ToString()),
+                Amount = Int32.Parse(reader["Amount"].ToString()),
+                Message = reader["Message"].ToString(),
+                RequestDate = DateTime.Parse(reader["RequestDate"].ToString()),
+                Status = (Ticket.Approval)Int32.Parse(reader["ApprovalStatus"].ToString())
+            };
+
+            AllTickets.Add(t);
+        }
+        reader.Close();
+        cmd.Dispose();
+        return AllTickets;
+    }
 
     public Ticket Get(int requestID)
     {
@@ -68,15 +166,18 @@ public class TicketRepository
         using SqlDataReader reader = cmd.ExecuteReader();
 
         // Parse the returned data table
-        Ticket t = new Ticket();
+        Ticket t = null;
         while (reader.Read())
         {
-            t.RequestID = Int32.Parse(reader["RequestID"].ToString());
-            t.AuthorID = Int32.Parse(reader["AuthorID"].ToString());
-            t.Amount = Int32.Parse(reader["Amount"].ToString());
-            t.Message = reader["Message"].ToString();
-            t.RequestDate = DateTime.Parse(reader["RequestDate"].ToString());
-            t.Status = (Ticket.Approval)Int32.Parse(reader["ApprovalStatus"].ToString());
+            t = new Ticket
+            {
+                RequestID = Int32.Parse(reader["RequestID"].ToString()),
+                AuthorID = Int32.Parse(reader["AuthorID"].ToString()),
+                Amount = Int32.Parse(reader["Amount"].ToString()),
+                Message = reader["Message"].ToString(),
+                RequestDate = DateTime.Parse(reader["RequestDate"].ToString()),
+                Status = (Ticket.Approval)Int32.Parse(reader["ApprovalStatus"].ToString())
+            };
         }
         reader.Close();
         cmd.Dispose();

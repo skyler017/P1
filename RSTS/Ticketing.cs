@@ -8,7 +8,7 @@ using RSTS.Userzone;
 
 namespace RSTS.Navigation;
 
-internal class Ticketing
+public class Ticketing
 {
     // Fields
     private enum Page

@@ -10,7 +10,7 @@ namespace RSTS.DataInfrustructure;
 
 
 // CRUD operations on the Ticket object and the db
-public class UserRepository
+public class UserRepository : IUserRepository
 {
     private readonly string _connectionstring;
 
@@ -34,11 +34,13 @@ public class UserRepository
         List<User> AllUsers = new List<User>();
         while (reader.Read())
         {
-            User u = new User();
-            u.UserID = Int32.Parse(reader["UserID"].ToString());
-            u.Username = reader["Username"].ToString();
-            u.Password = reader["Password"].ToString();
-            u.EmployeeType = (User.Role)Int32.Parse(reader["ApprovalStatus"].ToString());
+            User u = new User
+            {
+                UserID = Int32.Parse(reader["UserID"].ToString()),
+                Username = reader["Username"].ToString(),
+                Password = reader["Password"].ToString(),
+                EmployeeType = (User.Role)Int32.Parse(reader["ApprovalStatus"].ToString())
+            };
 
             AllUsers.Add(u);
         }
@@ -49,6 +51,7 @@ public class UserRepository
 
     public User Get(string username, string password)
     {
+        //Console.WriteLine("Repo check on " + username + " || " + (password == "" ? "none" : password) + ". RepoGo");
         using SqlConnection connection = new SqlConnection(_connectionstring);
         connection.Open();
 
@@ -57,20 +60,25 @@ public class UserRepository
         cmdText.Append(" SELECT ");
         cmdText.Append(" UserID, Username, Password, EmployeeType ");
         cmdText.Append(" FROM RSTS.Users ");
-        cmdText.Append(" WHERE Username = @user AND Password = @pass ");
+        cmdText.Append(" WHERE Username = @user ");
+        cmdText.Append(password != "" ? " AND Password = @pass ":"");
         using SqlCommand cmd = new SqlCommand(cmdText.ToString(), connection);
         cmd.Parameters.AddWithValue("@user", username);
-        cmd.Parameters.AddWithValue("@pass", password);
+        if (password != "")
+            cmd.Parameters.AddWithValue("@pass", password);
         using SqlDataReader reader = cmd.ExecuteReader();
 
         // Parse the returned data table
-        User u = new User();
+        User u = null;
         while (reader.Read())
         {
-            u.UserID = Int32.Parse(reader["UserID"].ToString());
-            u.Username = reader["Username"].ToString();
-            u.Password = reader["Password"].ToString();
-            u.EmployeeType = (User.Role)Int32.Parse(reader["EmployeeType"].ToString());
+            u = new User
+            {
+                UserID = Int32.Parse(reader["UserID"].ToString()),
+                Username = reader["Username"].ToString(),
+                Password = reader["Password"].ToString(),
+                EmployeeType = (User.Role)Int32.Parse(reader["EmployeeType"].ToString())
+            };
         }
         reader.Close();
         cmd.Dispose();
@@ -94,13 +102,16 @@ public class UserRepository
         using SqlDataReader reader = cmd.ExecuteReader();
 
         // Parse the returned data table
-        User u = new User();
+        User u = null;
         while (reader.Read())
         {
-            u.UserID = Int32.Parse(reader["UserID"].ToString());
-            u.Username = reader["Username"].ToString();
-            u.Password = reader["Password"].ToString();
-            u.EmployeeType = (User.Role)Int32.Parse(reader["EmployeeType"].ToString());
+            u = new User
+            {
+                UserID = Int32.Parse(reader["UserID"].ToString()),
+                Username = reader["Username"].ToString(),
+                Password = reader["Password"].ToString(),
+                EmployeeType = (User.Role)Int32.Parse(reader["EmployeeType"].ToString())
+            };
         }
         reader.Close();
         cmd.Dispose();
@@ -126,9 +137,10 @@ public class UserRepository
         cmd.Parameters.AddWithValue("@etype", User.Role.Employee);
         cmd.ExecuteNonQuery();
 
-        // retrieve the returned identity pk_requestid
+        // retrieve the returned identity pk_userid
         int newId = Convert.ToInt32(cmd.ExecuteScalar());
         u.UserID = newId;
+        u.EmployeeType = User.Role.Employee;
         return u;
     }
 

@@ -7,12 +7,28 @@ using System.Threading.Tasks;*/
 
 namespace RSTS.DataInfrustructure;
 
-public interface IRepository
+public interface ITicketRepository// where T_RSTS : class
 {
     // Contract Methods
+    //public List<Ticket> GetAll();
+    //public List<Ticket> GetAll(int authorid);
+    public List<Ticket> GetAll(int? authorid);
+    public List<Ticket> GetAllOnApproved(bool approval);
+    public Ticket Get(int id);
+    public Ticket Create(Ticket halfdefined);
+    public void Update(int id, Ticket fullydefined);
+    public void Delete(int id);
 
-    //public string GetCredentials(string username, string password);
-    //public bool ValidateCredentials(string username, string password);
-    //public User FindUser(string username, string password);
+}
+
+public interface IUserRepository
+{
+    // Contract Methods
+    public List<User> GetAll();
+    public User Get(string username, string password);
+    public User Get(int id);
+    public User Create(User halfdefined);
+    public void Update(int id, User fullydefined);
+    public void Delete(int id);
 
 }
