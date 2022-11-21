@@ -40,7 +40,7 @@ public class TicketRepository : ITicketRepository
             {
                 RequestID = Int32.Parse(reader["RequestID"].ToString()),
                 AuthorID = Int32.Parse(reader["AuthorID"].ToString()),
-                Amount = Int32.Parse(reader["Amount"].ToString()),
+                Amount = Decimal.Parse(reader["Amount"].ToString()),
                 Message = reader["Message"].ToString(),
                 RequestDate = DateTime.Parse(reader["RequestDate"].ToString()),
                 Status = (Ticket.Approval)Int32.Parse(reader["ApprovalStatus"].ToString())
@@ -77,7 +77,7 @@ public class TicketRepository : ITicketRepository
                 {
                     RequestID = Int32.Parse(reader["RequestID"].ToString()),
                     AuthorID = Int32.Parse(reader["AuthorID"].ToString()),
-                    Amount = Int32.Parse(reader["Amount"].ToString()),
+                    Amount = Decimal.Parse(reader["Amount"].ToString()),
                     Message = reader["Message"].ToString(),
                     RequestDate = DateTime.Parse(reader["RequestDate"].ToString()),
                     Status = (Ticket.Approval)Int32.Parse(reader["ApprovalStatus"].ToString())
@@ -101,7 +101,7 @@ public class TicketRepository : ITicketRepository
                 {
                     RequestID = Int32.Parse(reader["RequestID"].ToString()),
                     AuthorID = Int32.Parse(reader["AuthorID"].ToString()),
-                    Amount = Int32.Parse(reader["Amount"].ToString()),
+                    Amount = Decimal.Parse(reader["Amount"].ToString()),
                     Message = reader["Message"].ToString(),
                     RequestDate = DateTime.Parse(reader["RequestDate"].ToString()),
                     Status = (Ticket.Approval)Int32.Parse(reader["ApprovalStatus"].ToString())
@@ -137,7 +137,7 @@ public class TicketRepository : ITicketRepository
             {
                 RequestID = Int32.Parse(reader["RequestID"].ToString()),
                 AuthorID = Int32.Parse(reader["AuthorID"].ToString()),
-                Amount = Int32.Parse(reader["Amount"].ToString()),
+                Amount = Decimal.Parse(reader["Amount"].ToString()),
                 Message = reader["Message"].ToString(),
                 RequestDate = DateTime.Parse(reader["RequestDate"].ToString()),
                 Status = (Ticket.Approval)Int32.Parse(reader["ApprovalStatus"].ToString())
@@ -174,7 +174,7 @@ public class TicketRepository : ITicketRepository
             {
                 RequestID = Int32.Parse(reader["RequestID"].ToString()),
                 AuthorID = Int32.Parse(reader["AuthorID"].ToString()),
-                Amount = Int32.Parse(reader["Amount"].ToString()),
+                Amount = Decimal.Parse(reader["Amount"].ToString()),
                 Message = reader["Message"].ToString(),
                 RequestDate = DateTime.Parse(reader["RequestDate"].ToString()),
                 Status = (Ticket.Approval)Int32.Parse(reader["ApprovalStatus"].ToString())
@@ -209,7 +209,7 @@ public class TicketRepository : ITicketRepository
             {
                 RequestID = Int32.Parse(reader["RequestID"].ToString()),
                 AuthorID = Int32.Parse(reader["AuthorID"].ToString()),
-                Amount = Int32.Parse(reader["Amount"].ToString()),
+                Amount = Decimal.Parse(reader["Amount"].ToString()),
                 Message = reader["Message"].ToString(),
                 RequestDate = DateTime.Parse(reader["RequestDate"].ToString()),
                 Status = (Ticket.Approval)Int32.Parse(reader["ApprovalStatus"].ToString())

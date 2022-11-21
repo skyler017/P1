@@ -144,7 +144,7 @@ class Program
             User employee = new User();
             string GivenUsername = "";
             string GivenPassword = "";
-            int ticketamount = -1;
+            decimal ticketamount = -1.00m;
             string ticketmessage = "";
 
             while (1 == 1)
@@ -433,14 +433,17 @@ class Program
 
                     case Page.TKTSEND:
                         TicketSendoff_Employee_Prompt(ticketamount,ticketmessage);
-                        Orders = TicketSendoff_Employee_ProcessInput(ticketamount, ticketmessage);
+                        Orders = TicketSendoff_Employee_ProcessInput(employee, ticketamount, ticketmessage);
                         switch(Orders)
                         {
-                            case CMD.OPT9: // redo the ticket message
-                            case CMD.BACK:
+                            case CMD.OPT2:
+                            case CMD.BACK: // redo the ticket message
                                 Bookmark = Page.TKT_MSG;
                                 break;
+                            case CMD.OPT1: // send the ticket to be approved
                             case CMD.FORW: // send the ticket to be approved
+                            case CMD.OPT3: // dont send the ticket
+                            case CMD.FAIL: // dont send the ticket
                                 Bookmark = Page.LAND_EM;
                                 break;
                             default:
@@ -723,24 +726,117 @@ class Program
         return CMD.RETRY;
     }
 
+    private static void TicketAmount_Employee_Prompt()
+    {
+        StringBuilder sB = new();
+        sB.AppendLine("Enter the amount to be reimbursed");
+        ConsoleBased cB = new();
+        cB.DisplayPage(new string[] {sB.ToString() });
+    }
+    private static CMD TicketAmount_Employee_ProcessInput(out decimal amount)
+    {
+        IInput cB = new ConsoleBased();
+        string userInputMessage = cB.GetUserInput();
+        decimal userInputNum;
+        if (Decimal.TryParse(userInputMessage, out userInputNum))
+        {
+            amount = userInputNum;
+            return CMD.FORW;
+        }
+        else
+        {
+            cB.DisplayPage(new string[] { "Input was not a valid number" });
+            amount = -1;
+            return CMD.FAIL;
+        }
+    }
+    private static void TicketMessage_Employee_Prompt()
+    {
+        StringBuilder sB = new();
+        sB.AppendLine("Please describe the necessity for the charge.");
+        sB.AppendLine("Include a breakdown of item costs");
+        ConsoleBased cB = new();
+        cB.DisplayPage(new string[] { sB.ToString() });
+    }
+    private static CMD TicketMessage_Employee_ProcessInput(out string ticketmessage) 
+    {
+        IInput cB = new ConsoleBased();
+        ticketmessage = "";
+
+        string userInputMessage = cB.GetUserInput();
+        int userInputNum = CheckForValidNumerical(userInputMessage, new int[] { 9 });
+        if (userInputNum > 0) return (CMD) userInputNum;
+        else
+        {
+            ticketmessage = userInputMessage;
+            return CMD.FORW;
+        }
+    }
+    private static void TicketSendoff_Employee_Prompt(decimal ticketamount, string ticketmessage)
+    {
+        StringBuilder sB = new();
+        sB.AppendLine("Your ticket is ready to be submitted");
+        sB.AppendLine("You have requested an amount equal to $" + ticketamount);
+        sB.AppendLine("You left the following message for this request:");
+        sB.AppendLine(ticketmessage);
+        sB.AppendLine("-------------------------------");
+        sB.AppendLine("(type the corresponding number from the selection below and press 'enter')");
+        sB.AppendLine("What would you like to do?");
+        sB.AppendLine("1.Send this ticket");
+        sB.AppendLine("2.Change this message");
+        sB.AppendLine("3.Cancel this ticket");
+        ConsoleBased cB = new();
+        cB.DisplayPage(new string[] { sB.ToString() });
+    }
+    private static CMD TicketSendoff_Employee_ProcessInput(User user, decimal ticketamount, string ticketmessage)
+    {
+        IInput page = new ConsoleBased();
+
+        // Fetch the user's input string and ensure it is a valid option
+        string userInputMessage = page.GetUserInput();
+        int userInputNum = CheckForValidNumerical(userInputMessage, new int[] { 1, 2, 3 });
+        if (userInputNum <= 0)
+        {
+            page.DisplayPage(new string[] { "Please enter a number from the selection." });
+            return CMD.RETRY;
+        }
+
+        switch (userInputNum)
+        {
+            case 1: // send the ticket
+                // make the api call to save the ticket
+                var recevier = CreateTicketAsync(new Ticket(user.UserID, ticketamount, ticketmessage));
+                return CMD.FORW;
+            case 2: // redo the message
+                return CMD.BACK;
+            case 3: // cancel the ticket
+                return CMD.FAIL;
+            default:
+                return CMD.NIL;
+        }
+    }
 
     private static void PageDoesNotExist(Page which)
     {
         IInput page = new ConsoleBased();
         page.DisplayPage(new string[] { "The requested page does not exist: " + which });
     }
-
     private static void NESTED_DEFAULT_ERROR(Page where, CMD why)
     {
         IInput page = new ConsoleBased();
         page.DisplayPage(new string[] { $"Error on Page {where} due to Command {why}.\nExiting Program" });
+    }
+    private static void State_The_Error(string msg)
+    {
+        ConsoleBased cB = new();
+        cB.DisplayPage(new string[] { msg });
     }
 
     //======================================
     ///// API Interaction /////
     // Start Tickets
 
-    // Format for displaying tickets
+    // alternative format for displaying tickets
     static string ShowTicket(Ticket t)
     {
         return $"ID: {t.RequestID}\t Author: {t.AuthorID}\t Amount: {t.Amount}\t" +

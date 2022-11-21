@@ -61,7 +61,9 @@ app.UseHttpsRedirection();
 // used by employees to create a new ticket
 app.MapPost("/ticket", (Ticket t) =>
 {
-    return Results.Problem();
+    Ticket DBt = Accessing.Try_AddTicket(t);
+    if(DBt==null) Results.BadRequest(null);
+    return Results.Created($"/ticket/id",DBt);
 });
 
 

@@ -13,6 +13,7 @@ public interface IDbContext
     public List<Ticket> GetAllofUsersTickets(User user);
     public Ticket GetATicket(User user, int id);
     public Ticket GetOldestUnapprovedTicket();
+    public Ticket Try_AddTicket(Ticket ticket);
     public void UpdateTicket(Ticket ticket);
     public User LoginUser(string username, string password);
     public User Try_AddUser(User user);

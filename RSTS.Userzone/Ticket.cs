@@ -14,7 +14,7 @@ namespace RSTS.Userzone
         // Fields
         public int RequestID { get; set; }
         public int AuthorID { get; set; }
-        public double Amount { get; set; }
+        public decimal Amount { get; set; }
         public string Message { get; set; }
         public DateTime RequestDate { get; set; }
         public Approval Status { get; set; }
@@ -33,7 +33,7 @@ namespace RSTS.Userzone
         /// <param name="amount"></param>
         /// <param name="message"></param>
         /// <param name="status"></param>
-        public Ticket(int authorid, int amount, string message, 
+        public Ticket(int authorid, decimal amount, string message, 
             int requestid, DateTime requestdate, Approval status)
         {
             AuthorID = authorid;
@@ -50,7 +50,7 @@ namespace RSTS.Userzone
         /// <param name="authorid"></param>
         /// <param name="amount"></param>
         /// <param name="message"></param>
-        public Ticket(int authorid, int amount, string message)
+        public Ticket(int authorid, decimal amount, string message)
         {
             AuthorID = authorid;
             Amount = amount;

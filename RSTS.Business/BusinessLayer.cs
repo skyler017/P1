@@ -43,6 +43,17 @@ public class BusinessLayer : IDbContext
         return TicketRoll.GetByApproval(Ticket.Approval.Pending);
     }
 
+    public Ticket Try_AddTicket(Ticket ticket)
+    {
+        if (ticket == null || ticket.AuthorID == 0 || ticket.Amount <= 0 || ticket.Message == "")
+            return null;
+        else
+        {
+            Ticket receiver = TicketRoll.Create(ticket);
+            return TicketRoll.Get(receiver.RequestID);
+        }
+    }
+
     public void UpdateTicket(Ticket ticket)
     {
         TicketRoll.Update(ticket.RequestID, ticket);
