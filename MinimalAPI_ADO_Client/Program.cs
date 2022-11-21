@@ -127,7 +127,7 @@ class Program
             var statusCode = await DeleteCategoryAsync(category.Categoryid);
             Console.WriteLine($"Deleted (HTTP Status = {(int)statusCode})");
             */
-            Console.WriteLine("Press <ENTER> to exit...");
+            Console.WriteLine("Press <ENTER> to begin...");
 
         }
         catch (Exception e)
