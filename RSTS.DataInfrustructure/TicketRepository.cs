@@ -240,7 +240,7 @@ public class TicketRepository : ITicketRepository
         cmd.Parameters.AddWithValue("@amount", t.Amount);
         cmd.Parameters.AddWithValue("@message", t.Message);
         cmd.Parameters.AddWithValue("@approval", Ticket.Approval.Pending);
-        cmd.ExecuteNonQuery();
+        //cmd.ExecuteNonQuery();
 
         // retrieve the returned identity pk_requestid
         int newId = Convert.ToInt32(cmd.ExecuteScalar());

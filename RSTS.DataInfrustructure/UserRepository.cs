@@ -135,7 +135,7 @@ public class UserRepository : IUserRepository
         cmd.Parameters.AddWithValue("@username", u.Username);
         cmd.Parameters.AddWithValue("@password", u.Password);
         cmd.Parameters.AddWithValue("@etype", User.Role.Employee);
-        cmd.ExecuteNonQuery();
+        //cmd.ExecuteNonQuery();
 
         // retrieve the returned identity pk_userid
         int newId = Convert.ToInt32(cmd.ExecuteScalar());
