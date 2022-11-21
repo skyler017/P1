@@ -21,21 +21,21 @@ class Program
 
     private enum Page
     {
-        OPEN = 0
+        OPENING = 0
         , SIGNU_E, SIGNU_A, SIGNU_P, SIGNU_V // Signup for an account - E_mail, A_vailable, P_assword, V_alidate
         , LOGIN_E,          LOGIN_P, LOGIN_V // Login to existing account
-        , WELCOME, LAND_EM, LAND_MN
-        //, PENDTKT, 
-        , EMP_TKT, EFT_TKT, CRT_TKT // Employee side: view, filter, create
-        , MGR_TKT, MFT_TKT, APV_TKT // Manager side: view, filter, approve
+        , WELCOME   // successful login
+        , LAND_MN, MGR_TKT//, MGRFTKT, MGRPRMT // Manager side: landing, aprove tickets, view and filter, promote employees
+        , LAND_EM, EMP_TKT, CRT_TKT, EFT_TKT // Employee side: view, create
+        , TKTAMNT, TKT_MSG, TKTSEND // ticket creation: amount, message, sendoff
     }
+    
     private enum CMD
     {
         NIL = -1
         , OPT1 = 1, OPT2 = 2, OPT3 = 3, OPT4 = 4 /**/, OPT9 = 9
         , FORW, BACK, FAIL, RETRY
     };
-
 
     static void Main()
     {
@@ -139,19 +139,20 @@ class Program
 
         try
         {
-            Page Bookmark = Page.OPEN;
+            Page Bookmark = Page.OPENING;
             CMD Orders;
             User employee = new User();
             string GivenUsername = "";
             string GivenPassword = "";
-            //string webpath = "";
+            int ticketamount = -1;
+            string ticketmessage = "";
 
             while (1 == 1)
             {
                 Orders = CMD.NIL;
                 switch (Bookmark)
                 {
-                    case Page.OPEN:
+                    case Page.OPENING:
                         OPEN_WelcomeText();
                         Orders = OPEN_ProcessInput();
                         switch (Orders)
@@ -177,7 +178,7 @@ class Program
                         {
                             case CMD.OPT9: // Go back
                             case CMD.BACK:
-                                Bookmark = Page.OPEN;
+                                Bookmark = Page.OPENING;
                                 break;
                             case CMD.FORW: // Email is formatted correctly
                                 Bookmark = Page.SIGNU_A;
@@ -213,7 +214,7 @@ class Program
                         {
                             case CMD.OPT9: // Go back
                             case CMD.BACK:
-                                Bookmark = Page.OPEN;
+                                Bookmark = Page.OPENING;
                                 continue;
                             case CMD.FORW: // Password acceptable
                                 Bookmark = Page.SIGNU_V;
@@ -236,7 +237,7 @@ class Program
                                 Bookmark = Page.WELCOME;
                                 break;
                             case CMD.FAIL: // Could not create account for some reason
-                                Bookmark = Page.OPEN;
+                                Bookmark = Page.OPENING;
                                 break;
                             default:
                                 NESTED_DEFAULT_ERROR(Bookmark, Orders);
@@ -251,7 +252,7 @@ class Program
                         {
                             case CMD.OPT9: // Go back
                             case CMD.BACK:
-                                Bookmark = Page.OPEN;
+                                Bookmark = Page.OPENING;
                                 break;
                             case CMD.FORW: // Email received
                                 Bookmark = Page.LOGIN_P;
@@ -330,6 +331,10 @@ class Program
                         Orders = LANDING_Manager_ProcessInput(employee);
                         switch (Orders)
                         {
+                            case CMD.OPT9: // Go back
+                            case CMD.BACK:
+                                Bookmark = Page.OPENING;
+                                break;
                             case CMD.OPT1:
                                 Bookmark = Page.MGR_TKT;
                                 break;
@@ -340,7 +345,7 @@ class Program
                                 return;
 
                         }
-                        //Bookmark = Page.OPEN;
+                        //Bookmark = Page.OPENING;
                         break;
 
                     case Page.MGR_TKT:
@@ -354,7 +359,7 @@ class Program
                                 continue;
                             case CMD.OPT9: // go back to landing
                             case CMD.BACK: // forced out of ticket approving
-                            case CMD.FAIL: // denied authorization
+                            //case CMD.FAIL: // denied authorization
                                 Bookmark = Page.LAND_MN;
                                 break;                            
                             default:
@@ -368,11 +373,76 @@ class Program
                         Orders = LANDING_Employee_ProcessInput(employee);
                         switch(Orders)
                         {
-                            case CMD.OPT1:
-                                Bookmark = Page.OPEN;
+                            case CMD.OPT9: // logout, go back to the start
+                            case CMD.BACK:
+                                Bookmark = Page.OPENING;
                                 break;
+                            case CMD.OPT1:
+                                Bookmark = Page.TKTAMNT;
+                                break;
+                            case CMD.OPT2:
+                                // show all pending tickets
+                                continue;
+                            case CMD.OPT3:
+                                // show all procesed tickets
+                                continue;
                             case CMD.RETRY:
                                 continue;
+                            default:
+                                NESTED_DEFAULT_ERROR(Bookmark, Orders);
+                                return;
+                        }
+                        break;
+
+                    case Page.TKTAMNT:
+                        TicketAmount_Employee_Prompt();
+                        Orders = TicketAmount_Employee_ProcessInput(out ticketamount);
+                        switch(Orders)
+                        {
+                            //case CMD.OPT9: // cancel ticket, go back
+                            //    break;        // do not implemet, will block $9 purchases
+                            case CMD.FORW: // successful $ input
+                                Bookmark = Page.TKT_MSG;
+                                break;
+                            case CMD.FAIL: // not a $ input
+                                Bookmark = Page.LAND_EM;
+                                break;
+                            default:
+                                NESTED_DEFAULT_ERROR(Bookmark, Orders);
+                                return;
+                        }
+                        break;
+
+                    case Page.TKT_MSG:
+                        TicketMessage_Employee_Prompt();
+                        Orders = TicketMessage_Employee_ProcessInput(out ticketmessage);
+                        switch(Orders)
+                        {
+                            case CMD.OPT9: // go back to landing
+                            case CMD.BACK:
+                                Bookmark = Page.LAND_EM;
+                                break;
+                            case CMD.FORW:
+                                Bookmark = Page.TKTSEND;
+                                break;
+                            default:
+                                NESTED_DEFAULT_ERROR(Bookmark, Orders);
+                                return;
+                        }
+                        break;
+
+                    case Page.TKTSEND:
+                        TicketSendoff_Employee_Prompt(ticketamount,ticketmessage);
+                        Orders = TicketSendoff_Employee_ProcessInput(ticketamount, ticketmessage);
+                        switch(Orders)
+                        {
+                            case CMD.OPT9: // redo the ticket message
+                            case CMD.BACK:
+                                Bookmark = Page.TKT_MSG;
+                                break;
+                            case CMD.FORW: // send the ticket to be approved
+                                Bookmark = Page.LAND_EM;
+                                break;
                             default:
                                 NESTED_DEFAULT_ERROR(Bookmark, Orders);
                                 return;
@@ -539,8 +609,8 @@ class Program
         sb.AppendLine($"Welcome back, {manager.Username}.");
         sb.AppendLine("What would you like to do? (Type the corresponding number from the selection below and press 'enter')");
         sb.AppendLine("1.Check pending tickets");
-        sb.AppendLine("2.Review processed tickets");
-        sb.AppendLine("3.Register employees as managers");
+        //sb.AppendLine("2.Review processed tickets");
+        //sb.AppendLine("3.Register employees as managers");
         sb.AppendLine("9. Logout");
         IInput page = new ConsoleBased();
         page.DisplayPage(new string[] { sb.ToString() });
@@ -550,9 +620,9 @@ class Program
     {
         IInput cB = new ConsoleBased();
 
-        // Fetch the user's input string and ensure it is a 1 or 2
+        // Fetch the user's input string and ensure it is valid
         string userInputMessage = cB.GetUserInput();
-        int userInputNum = CheckForValidNumerical(userInputMessage, new int[] { 1, 2, 3, 9 });
+        int userInputNum = CheckForValidNumerical(userInputMessage, new int[] { 1, /*2, 3,*/ 9 });
         if (userInputNum > 0) return (CMD)userInputNum;
         cB.DisplayPage(new string[] { "Please enter a number from the selection." });
         return CMD.RETRY;
@@ -561,21 +631,31 @@ class Program
     private static void Complete_Tickets_Manager_Prompt(User manager)
     {
         StringBuilder sb = new StringBuilder();
-        sb.AppendLine("Displaying Ticket...");
-        Ticket show = GetNextTicketAsync(manager).Result;
-        sb.AppendLine(ShowTicket(show));
-        sb.AppendLine("You can approve or deny this reimbursment.");
-        sb.AppendLine("(Type the corresponding number from the selection below and press 'enter')");
-        sb.AppendLine("1.Approve reimbursment");
-        sb.AppendLine("3.Deny reimbursment");
-        sb.AppendLine("9.Return to the Landing");
         IInput page = new ConsoleBased();
+
+        Ticket show = GetNextTicketAsync(manager).Result;
+        if (show != null)
+        {
+            sb.AppendLine("Displaying Ticket...");
+            sb.AppendLine(ShowTicket(show));
+            sb.AppendLine("You can approve or deny this reimbursment.");
+            sb.AppendLine("(Type the corresponding number from the selection below and press 'enter')");
+            sb.AppendLine("1.Approve reimbursment");
+            sb.AppendLine("3.Deny reimbursment");
+            sb.AppendLine("9.Return to the Landing");
+        }
+        else
+        {
+            sb.AppendLine("No more tickets to display");
+        }
         page.DisplayPage(new string[] { sb.ToString() });
+        return;
     }
 
     private static CMD Complete_Tickets_Manager_ProcessInput(User manager)
     {
         Ticket mod = GetNextTicketAsync(manager).Result;
+        if(mod == null) return CMD.BACK;
         IInput page = new ConsoleBased();
 
         // Fetch the user's input string and ensure it is a 1 or 2
@@ -633,13 +713,13 @@ class Program
 
     private static CMD LANDING_Employee_ProcessInput(User employee)
     {
-        IInput consoleBased = new ConsoleBased();
+        IInput cB = new ConsoleBased();
 
         // Fetch the user's input string and ensure it is valid
-        string userInputMessage = consoleBased.GetUserInput();
+        string userInputMessage = cB.GetUserInput();
         int userInputNum = CheckForValidNumerical(userInputMessage, new int[] { 1, 2, 3, 9 });
         if (userInputNum > 0) return (CMD)userInputNum;
-        consoleBased.DisplayPage(new string[] { "Please enter a number from the selection." });
+        cB.DisplayPage(new string[] { "Please enter a number from the selection." });
         return CMD.RETRY;
     }
 
@@ -685,6 +765,7 @@ class Program
     {
         HttpResponseMessage response = await client.PostAsJsonAsync($"ticket/0", emp);
         Ticket t = null;
+        
         if (response.IsSuccessStatusCode)
         {
             t = await response.Content.ReadAsAsync<Ticket>();
