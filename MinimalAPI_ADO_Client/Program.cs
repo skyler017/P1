@@ -26,7 +26,7 @@ class Program
         , LOGIN_E,          LOGIN_P, LOGIN_V // Login to existing account
         , WELCOME   // successful login
         , LAND_MN, MGR_TKT//, MGRFTKT, MGRPRMT // Manager side: landing, aprove tickets, view and filter, promote employees
-        , LAND_EM, EMP_TKT, CRT_TKT, EFT_TKT // Employee side: view, create
+        , LAND_EM, PREVTKT//PENDTKT, DONETKT // Employee side: landing, view, 
         , TKTAMNT, TKT_MSG, TKTSEND // ticket creation: amount, message, sendoff
     }
     
@@ -381,10 +381,8 @@ class Program
                                 Bookmark = Page.TKTAMNT;
                                 break;
                             case CMD.OPT2:
-                                // show all pending tickets
-                                continue;
-                            case CMD.OPT3:
-                                // show all procesed tickets
+                                // show all previous tickets
+                                Bookmark = Page.PREVTKT;
                                 continue;
                             case CMD.RETRY:
                                 continue;
@@ -394,13 +392,17 @@ class Program
                         }
                         break;
 
+                    case Page.PREVTKT:
+                        PreviousTickets_Employee_Process(employee);
+                        Bookmark = Page.LAND_EM;
+                        break;
+
                     case Page.TKTAMNT:
                         TicketAmount_Employee_Prompt();
                         Orders = TicketAmount_Employee_ProcessInput(out ticketamount);
                         switch(Orders)
                         {
-                            //case CMD.OPT9: // cancel ticket, go back
-                            //    break;        // do not implemet, will block $9 purchases
+                            //case CMD.OPT9: // do not implemet, will block $9 purchases
                             case CMD.FORW: // successful $ input
                                 Bookmark = Page.TKT_MSG;
                                 break;
@@ -707,8 +709,7 @@ class Program
         // sb.AppendLine(call function that gets all the approved tickets)
         sb.AppendLine("What would you like to do? (type the corresponding number from the selection below and press 'enter')");
         sb.AppendLine("1.Submit a new ticket");
-        sb.AppendLine("2.View pending tickets");
-        sb.AppendLine("3.Review processed tickets");
+        sb.AppendLine("2.Review submitted tickets");
         sb.AppendLine("9. Logout");
         IInput page = new ConsoleBased();
         page.DisplayPage(new string[] { sb.ToString() });
@@ -720,10 +721,20 @@ class Program
 
         // Fetch the user's input string and ensure it is valid
         string userInputMessage = cB.GetUserInput();
-        int userInputNum = CheckForValidNumerical(userInputMessage, new int[] { 1, 2, 3, 9 });
+        int userInputNum = CheckForValidNumerical(userInputMessage, new int[] { 1, 2, 9 });
         if (userInputNum > 0) return (CMD)userInputNum;
         cB.DisplayPage(new string[] { "Please enter a number from the selection." });
         return CMD.RETRY;
+    }
+
+    private static void PreviousTickets_Employee_Process(User employee)
+    {
+        ConsoleBased cB = new();
+
+        List<Ticket> here = GetAllTicketsAsync(employee).Result;
+        foreach (Ticket t in here)
+            cB.DisplayPage(new string[] { t.ToString() });
+        return;
     }
 
     private static void TicketAmount_Employee_Prompt()
@@ -880,18 +891,16 @@ class Program
         return true;
     }
 
-    // post-tickets
+    // post-tickets :: gets all tickets available to the user
     static async Task<List<Ticket>> GetAllTicketsAsync(User user)
     {
-        List<Ticket> TicketList = new List<Ticket>();
-        var path = "tickets";
-        HttpResponseMessage response = await client.GetAsync(path);
-        //HttpResponseMessage response = await client.PostAsJsonAsync(userpath, u);
+        HttpResponseMessage response = await client.PostAsJsonAsync("tickets",user);
         if (response.IsSuccessStatusCode)
         {
-            TicketList = await response.Content.ReadAsAsync<List<Ticket>>();
+            List<Ticket> TicketList = await response.Content.ReadAsAsync<List<Ticket>>();
+            return TicketList;
         }
-        return TicketList;
+        return null;
     }
 
     // End Ticket
