@@ -25,8 +25,9 @@ class Program
         , SIGNU_E, SIGNU_A, SIGNU_P, SIGNU_V // Signup for an account - E_mail, A_vailable, P_assword, V_alidate
         , LOGIN_E,          LOGIN_P, LOGIN_V // Login to existing account
         , WELCOME, LAND_EM, LAND_MN
-        , EVW_TKT, EFT_TKT, CRT_TKT // Employee side: view, filter, create
-        , MVW_TKT, MFT_TKT, APV_TKT // Manager side: view, filter, approve
+        //, PENDTKT, 
+        , EMP_TKT, EFT_TKT, CRT_TKT // Employee side: view, filter, create
+        , MGR_TKT, MFT_TKT, APV_TKT // Manager side: view, filter, approve
     }
     private enum CMD
     {
@@ -324,13 +325,58 @@ class Program
                         }
                         break;
 
-                    case Page.LAND_EM:
-                        LANDING_Employee_WelcomeText(employee);
-                        Bookmark = Page.OPEN;
-                        break;
                     case Page.LAND_MN:
                         LANDING_Manager_WelcomeText(employee);
-                        Bookmark = Page.OPEN;
+                        Orders = LANDING_Manager_ProcessInput(employee);
+                        switch (Orders)
+                        {
+                            case CMD.OPT1:
+                                Bookmark = Page.MGR_TKT;
+                                break;
+                            case CMD.RETRY:
+                                continue;
+                            default:
+                                NESTED_DEFAULT_ERROR(Bookmark, Orders);
+                                return;
+
+                        }
+                        //Bookmark = Page.OPEN;
+                        break;
+
+                    case Page.MGR_TKT:
+                        Complete_Tickets_Manager_Prompt(employee);
+                        Orders = Complete_Tickets_Manager_ProcessInput(employee);
+                        switch (Orders)
+                        {
+                            case CMD.OPT1: // ticket approved
+                            case CMD.OPT3: // ticket denied
+                            case CMD.RETRY:
+                                continue;
+                            case CMD.OPT9: // go back to landing
+                            case CMD.BACK: // forced out of ticket approving
+                            case CMD.FAIL: // denied authorization
+                                Bookmark = Page.LAND_MN;
+                                break;                            
+                            default:
+                                NESTED_DEFAULT_ERROR(Bookmark, Orders);
+                                return;
+                        }
+                        break;
+
+                    case Page.LAND_EM:
+                        LANDING_Employee_WelcomeText(employee);
+                        Orders = LANDING_Employee_ProcessInput(employee);
+                        switch(Orders)
+                        {
+                            case CMD.OPT1:
+                                Bookmark = Page.OPEN;
+                                break;
+                            case CMD.RETRY:
+                                continue;
+                            default:
+                                NESTED_DEFAULT_ERROR(Bookmark, Orders);
+                                return;
+                        }
                         break;
                     default:
                         PageDoesNotExist(Bookmark);
@@ -490,14 +536,75 @@ class Program
     private static void LANDING_Manager_WelcomeText(User manager)
     {
         StringBuilder sb = new StringBuilder();
-        sb.AppendLine($"Welcome back {manager.Username}.");
-        sb.AppendLine("Please make a selection (type the corresponding # and press 'enter'.");
-        sb.AppendLine("1.Check tickets");
-        sb.AppendLine("2.Register employees as managers");
+        sb.AppendLine($"Welcome back, {manager.Username}.");
+        sb.AppendLine("What would you like to do? (Type the corresponding number from the selection below and press 'enter')");
+        sb.AppendLine("1.Check pending tickets");
+        sb.AppendLine("2.Review processed tickets");
+        sb.AppendLine("3.Register employees as managers");
+        sb.AppendLine("9. Logout");
         IInput page = new ConsoleBased();
         page.DisplayPage(new string[] { sb.ToString() });
     }
-    private static void LANDING_Manager_ViewTickets(User Dave/*, filter method*/)
+
+    private static CMD LANDING_Manager_ProcessInput(User manager)
+    {
+        IInput cB = new ConsoleBased();
+
+        // Fetch the user's input string and ensure it is a 1 or 2
+        string userInputMessage = cB.GetUserInput();
+        int userInputNum = CheckForValidNumerical(userInputMessage, new int[] { 1, 2, 3, 9 });
+        if (userInputNum > 0) return (CMD)userInputNum;
+        cB.DisplayPage(new string[] { "Please enter a number from the selection." });
+        return CMD.RETRY;
+    }
+
+    private static void Complete_Tickets_Manager_Prompt(User manager)
+    {
+        StringBuilder sb = new StringBuilder();
+        sb.AppendLine("Displaying Ticket...");
+        Ticket show = GetNextTicketAsync(manager).Result;
+        sb.AppendLine(ShowTicket(show));
+        sb.AppendLine("You can approve or deny this reimbursment.");
+        sb.AppendLine("(Type the corresponding number from the selection below and press 'enter')");
+        sb.AppendLine("1.Approve reimbursment");
+        sb.AppendLine("3.Deny reimbursment");
+        sb.AppendLine("9.Return to the Landing");
+        IInput page = new ConsoleBased();
+        page.DisplayPage(new string[] { sb.ToString() });
+    }
+
+    private static CMD Complete_Tickets_Manager_ProcessInput(User manager)
+    {
+        Ticket mod = GetNextTicketAsync(manager).Result;
+        IInput page = new ConsoleBased();
+
+        // Fetch the user's input string and ensure it is a 1 or 2
+        string userInputMessage = page.GetUserInput();
+        int userInputNum = CheckForValidNumerical(userInputMessage, new int[] { 1, 3, 9 });
+        if(userInputNum<=0)
+        {
+            page.DisplayPage(new string[] { "Please enter a number from the selection." });
+            return CMD.RETRY;
+        }
+        Task<bool> receiver;
+        switch (userInputNum)
+        {
+            case 1:
+                mod.Status = Ticket.Approval.Approved;
+                receiver = ReprocessTicketAsync(mod);
+                return CMD.OPT1;
+            case 3:
+                mod.Status = Ticket.Approval.Denied;
+                receiver = ReprocessTicketAsync(mod);
+                return CMD.OPT3;
+            case 9:
+                return CMD.OPT9;
+            default:
+                return CMD.NIL;
+        }
+    }
+
+    private static void LANDING_Manager_ViewTickets(User manager/*, filter? method*/)
     {
         StringBuilder sb = new StringBuilder();
         sb.AppendLine("Now displaying reimbursments:");
@@ -512,15 +619,30 @@ class Program
     private static void LANDING_Employee_WelcomeText(User employee)
     {
         StringBuilder sb = new StringBuilder();
-        sb.AppendLine($"Welcome {employee.Username}.");
-        sb.AppendLine("Now displaying reimbursments:");
+        sb.AppendLine($"Welcome, {employee.Username}.");
+        //sb.AppendLine("Now displaying reimbursments:");
         // sb.AppendLine(call function that gets all the approved tickets)
-        sb.AppendLine("Please make a selection (type the corresponding # and press 'enter'.");
-        sb.AppendLine("1.Find a subset of tickets");
-        sb.AppendLine("2.Approve pending tickets");
+        sb.AppendLine("What would you like to do? (type the corresponding number from the selection below and press 'enter')");
+        sb.AppendLine("1.Submit a new ticket");
+        sb.AppendLine("2.View pending tickets");
+        sb.AppendLine("3.Review processed tickets");
+        sb.AppendLine("9. Logout");
         IInput page = new ConsoleBased();
         page.DisplayPage(new string[] { sb.ToString() });
     }
+
+    private static CMD LANDING_Employee_ProcessInput(User employee)
+    {
+        IInput consoleBased = new ConsoleBased();
+
+        // Fetch the user's input string and ensure it is valid
+        string userInputMessage = consoleBased.GetUserInput();
+        int userInputNum = CheckForValidNumerical(userInputMessage, new int[] { 1, 2, 3, 9 });
+        if (userInputNum > 0) return (CMD)userInputNum;
+        consoleBased.DisplayPage(new string[] { "Please enter a number from the selection." });
+        return CMD.RETRY;
+    }
+
 
     private static void PageDoesNotExist(Page which)
     {
@@ -538,27 +660,54 @@ class Program
     ///// API Interaction /////
     // Start Tickets
 
-    static void ShowTicket(Ticket t)
+    // Format for displaying tickets
+    static string ShowTicket(Ticket t)
     {
-        Console.WriteLine($"ID: {t.RequestID}\t Author: {t.AuthorID}\t" +
-            $"Message: {t.Message}\t Status: {t.Status.ToString()}");
+        return $"ID: {t.RequestID}\t Author: {t.AuthorID}\t Amount: {t.Amount}\t" +
+            $"Status: {t.Status.ToString()}\t Message: {t.Message}";
     }
 
-    static async Task<Uri> CreateTicketAsync(Ticket t)
+    // post-ticket :: creates a new ticket based on the inputs, returns the completed ticket
+    static async Task<Ticket> CreateTicketAsync(Ticket t)
     {
-        Console.WriteLine(t);
-        HttpResponseMessage response = await client.PostAsJsonAsync("ticketplease", t);
-        response.EnsureSuccessStatusCode();
-
-        // return URI of the created resource.
-        return response.Headers.Location;
+        //Console.WriteLine(t);
+        HttpResponseMessage response = await client.PostAsJsonAsync("ticket", t);
+        if (response.IsSuccessStatusCode)
+        {
+            t = await response.Content.ReadAsAsync<Ticket>();
+        }
+        else t = null;
+        return t;
     }
 
-    //static async Task<List<Ticket>> GetAllTicketsAsync(string userpath, User u)
-    static async Task<List<Ticket>> GetAllTickets()
+    // post-ticket/0 :: obtains the ticket next available to the user and returns it
+    static async Task<Ticket> GetNextTicketAsync(User emp)
+    {
+        HttpResponseMessage response = await client.PostAsJsonAsync($"ticket/0", emp);
+        Ticket t = null;
+        if (response.IsSuccessStatusCode)
+        {
+            t = await response.Content.ReadAsAsync<Ticket>();
+        }
+        return t;
+    }
+
+    // post-ticket/{id} :: updates the ticket at {id} with the input ticket, returns the updated ticket
+    static async Task<bool> ReprocessTicketAsync(Ticket t)
+    {
+        HttpResponseMessage response = await client.PostAsJsonAsync($"ticket/{t.RequestID}", t);
+        if (response.IsSuccessStatusCode)
+        {
+            await response.Content.ReadAsAsync<Ticket>();
+        }
+        return true;
+    }
+
+    // post-tickets
+    static async Task<List<Ticket>> GetAllTicketsAsync(User user)
     {
         List<Ticket> TicketList = new List<Ticket>();
-        var path = "hedidnthavehisticket";
+        var path = "tickets";
         HttpResponseMessage response = await client.GetAsync(path);
         //HttpResponseMessage response = await client.PostAsJsonAsync(userpath, u);
         if (response.IsSuccessStatusCode)
@@ -568,19 +717,9 @@ class Program
         return TicketList;
     }
 
-    static async Task<Ticket> GetTicketAsync(string path)
-    {
-        Ticket t = null;
-        HttpResponseMessage response = await client.GetAsync(path);
-        if (response.IsSuccessStatusCode)
-        {
-            t = await response.Content.ReadAsAsync<Ticket>();
-        }
-        return t;
-    }
     // End Ticket
     //======================================
-    // Start User
+    // Start Login
     static async Task<User> SignupAsync(User u)
     {
         HttpResponseMessage response = await client.PostAsJsonAsync("signup", u);
@@ -590,7 +729,7 @@ class Program
             u = await response.Content.ReadAsAsync<User>();
         }
         else u = null;
-        return u; // response.Headers.Location; // "/user./{id}"
+        return u;
     }
 
     static async Task<User> LoginAsync(User u)
@@ -624,6 +763,6 @@ class Program
         else
             return false;
     }
-    // End User
+    // End Login
     //<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 }

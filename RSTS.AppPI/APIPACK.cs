@@ -44,15 +44,61 @@ if (app.Environment.IsDevelopment())
 app.UseHttpsRedirection();
 
 
+
 //////////////////////////////
 /////     Ticket API     /////
 //////////////////////////////
 
-// used to see a subset of tickets
-/*app.MapGet("/tickets", (User u) =>
+
+/// post-ticket
+/// <summary>
+/// Adds the ticket t to the database.
+/// </summary>
+/// <returns>
+/// The filled ticket object after its added to the db: code 201 Created (to pass object)
+/// A Null object because some fields are blank: code 409 Conflict
+/// </returns>
+// used by employees to create a new ticket
+app.MapPost("/ticket", (Ticket t) =>
+{
+    return Results.Problem();
+});
+
+
+/// post-ticket/0
+/// <return>
+/// Returns the oldest ticket unapproved to the given user
+/// </return>
+app.MapPost("/ticket/0", (User u) =>
+{
+    User DBu = Accessing.LoginUser(u.Username, u.Password);
+    switch(DBu.EmployeeType)
+    {
+        case User.Role.Manager:
+            Ticket DBt = Accessing.GetOldestUnapprovedTicket();
+        return Results.Created($"/ticket/{DBt.RequestID}", DBt);
+        default:
+            return Results.Unauthorized();
+    }
+    
+});
+
+// For the employee to edit a ticket, or manager to approve it
+app.MapPost("/ticket/{id}", (int id, Ticket t) =>
+{
+    //Console.WriteLine(t);
+    Accessing.UpdateTicket(t);
+    return Results.Ok("/tickets/{id}");
+});
+
+/// post-tickets
+/// <returns>
+/// All tickets available to the user : code 201 Created (to pass object)
+/// </returns>
+app.MapPost("/tickets", (User u) =>
 {
     List<Ticket> tickets;
-    Console.WriteLine(u);
+    //Console.WriteLine(u);
     // check creds
     User DBu = Accessing.LoginUser(u.Username,u.Password);
     // check emp type
@@ -67,28 +113,16 @@ app.UseHttpsRedirection();
         default:
             return Results.BadRequest();
     }
-});*/
+});
 
-// used by employees to create a new ticket
-/*app.MapPost("/tickets", (User u, Ticket t) =>
-{
-    return Results.Problem();
-});*/
-
-//https://localhost:7152/ticket/1
 // used by the user or managers to see a specific ticket
-/*app.MapGet("/tickets/{id}", (User u, int ticketid) =>
+/*app.MapGet("/tickets/{id}", (int id) =>
 {
-    Ticket t = Accessing.GetATicket(u, ticketid);
+    Ticket t = Accessing.GetATicket(id);
     if (t == null) return Results.Forbid();
     return Results.Ok(t);
-});
-*/
-// requested by the user to edit a ticket, or manager to approve it
-/*app.MapPost("/tickets/{id}", (User u, int ticketid) =>
-{
-    return Results.BadRequest();
 });*/
+
 // End Tickets
 //============================
 
@@ -153,42 +187,6 @@ app.MapPost("/check", (User u) =>
 });
 // End Login
 // <<<<<<<<<<<<<<<<<<<<<<<<<<<
-// Start Category
-//https://localhost:7152/categories/
-//app.MapGet("/categories", (CategoryRepository repo) =>
-//    repo.GetAll(connValue));
-
-//https://localhost:7152/categories/1
-//app.MapGet("/categories/{id}", (int id, CategoryRepository repo) =>
-//    repo.Get(connValue, id));
-
-//https://localhost:7152/categories/
-//{
-//    "categoryid": 0,
-//    "categoryName": "test",
-//    "description": "Test"
-//}
-/*app.MapPost("/categories", (Category category, CategoryRepository repo) =>
-{
-    Console.WriteLine(">>>>" + category);
-    category = repo.Create(connValue, category);
-    return Results.Created($"/categories/{category.Categoryid}", category);
-});*/
-
-//https://localhost:7152/categories/14
-/*//app.MapPut("/categories/{id}", (int id, Category category, CategoryRepository repo) =>
-{
-    repo.Update(connValue, id, category);
-    return Results.NoContent();
-});*/
-
-//https://localhost:7152/categories/14
-/*app.MapDelete("/categories/{id}", (int id, CategoryRepository repo) =>
-{
-    repo.Delete(connValue, id);
-    return Results.Ok(id);
-});*/
-
 
 //////////////////////////////
 /////     End of API     /////

@@ -38,6 +38,16 @@ public class BusinessLayer : IDbContext
         return TicketRoll.Get(id);
     }
 
+    public Ticket GetOldestUnapprovedTicket()
+    {
+        return TicketRoll.GetByApproval(Ticket.Approval.Pending);
+    }
+
+    public void UpdateTicket(Ticket ticket)
+    {
+        TicketRoll.Update(ticket.RequestID, ticket);
+    }
+
     public bool GetUsersTicket(User u, int ticketID)
     {
         if (u == null) return false;

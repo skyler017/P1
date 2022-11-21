@@ -8,14 +8,16 @@ namespace RSTS.Userzone
 { 
     public class Ticket
     {
+        // sub-objects
+        public enum Approval { Pending = 0, Denied = -1, Approved = 1 };
+
         // Fields
         public int RequestID { get; set; }
         public int AuthorID { get; set; }
         public double Amount { get; set; }
         public string Message { get; set; }
         public DateTime RequestDate { get; set; }
-        public enum Approval { Pending=0, Denied=-1, Approved=1 };
-        public Approval Status;
+        public Approval Status { get; set; }
 
 
         // Constructor

@@ -21,7 +21,7 @@ public class TicketRepository : ITicketRepository
         _connectionstring = connectionstring;
     }
 
-/*    public List<Ticket> GetAll()
+    /*public List<Ticket> GetAll()
     {
         using SqlConnection connection = new SqlConnection(_connectionstring);
         connection.Open();
@@ -150,6 +150,42 @@ public class TicketRepository : ITicketRepository
         return AllTickets;
     }
 
+    public Ticket GetByApproval(Ticket.Approval state)
+    {
+        using SqlConnection connection = new SqlConnection(_connectionstring);
+        connection.Open();
+
+        // retrieve a ticket from the db
+        StringBuilder cmdText = new StringBuilder();
+        cmdText.Append(" SELECT TOP 1");
+        cmdText.Append(" RequestID, AuthorID, Amount, Message, RequestDate, ApprovalStatus ");
+        cmdText.Append(" FROM RSTS.Tickets ");
+        cmdText.Append(" WHERE ApprovalStatus = @APS ");
+        cmdText.Append(" ORDER BY RequestDate Asc ");
+        using SqlCommand cmd = new SqlCommand(cmdText.ToString(), connection);
+        cmd.Parameters.AddWithValue("@APS", state);
+        using SqlDataReader reader = cmd.ExecuteReader();
+
+        // Parse the returned data table
+        Ticket t = null;
+        while (reader.Read())
+        {
+            t = new Ticket
+            {
+                RequestID = Int32.Parse(reader["RequestID"].ToString()),
+                AuthorID = Int32.Parse(reader["AuthorID"].ToString()),
+                Amount = Int32.Parse(reader["Amount"].ToString()),
+                Message = reader["Message"].ToString(),
+                RequestDate = DateTime.Parse(reader["RequestDate"].ToString()),
+                Status = (Ticket.Approval)Int32.Parse(reader["ApprovalStatus"].ToString())
+            };
+        }
+        reader.Close();
+        cmd.Dispose();
+
+        return t;
+    }
+
     public Ticket Get(int requestID)
     {
         using SqlConnection connection = new SqlConnection(_connectionstring);
@@ -185,6 +221,7 @@ public class TicketRepository : ITicketRepository
         return t;
     }
 
+
     public Ticket Create(Ticket t)
     {
         using SqlConnection connection = new SqlConnection(_connectionstring);
@@ -217,7 +254,7 @@ public class TicketRepository : ITicketRepository
         connection.Open();
 
         string cmdText = @" UPDATE RSTS.Tickets SET " +
-            " AuthorID = @userid " +
+            " AuthorID = @UID " +
             " , Amount = @amount " +
             " , Message = @message " +
             " , RequestDate = SYSUTCDATETIME() " +
@@ -227,7 +264,7 @@ public class TicketRepository : ITicketRepository
         cmd.Parameters.AddWithValue("@UID", UpdatedTicket.AuthorID);
         cmd.Parameters.AddWithValue("@amount", UpdatedTicket.Amount);
         cmd.Parameters.AddWithValue("@message", UpdatedTicket.Message);
-        cmd.Parameters.AddWithValue("@approval", Ticket.Approval.Pending);
+        cmd.Parameters.AddWithValue("@approval", UpdatedTicket.Status);
         cmd.Parameters.AddWithValue("@RID", OldVersionID);
         cmd.ExecuteNonQuery();
         cmd.Dispose();

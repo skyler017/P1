@@ -15,6 +15,7 @@ public interface ITicketRepository// where T_RSTS : class
     public List<Ticket> GetAll(int? authorid);
     public List<Ticket> GetAllOnApproved(bool approval);
     public Ticket Get(int id);
+    public Ticket GetByApproval(Ticket.Approval state);
     public Ticket Create(Ticket halfdefined);
     public void Update(int id, Ticket fullydefined);
     public void Delete(int id);
