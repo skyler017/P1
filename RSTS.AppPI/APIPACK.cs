@@ -76,14 +76,17 @@ app.MapPost("/ticket/0", (User u) =>
     {
         case User.Role.Manager:
             Ticket DBt = Accessing.GetOldestUnapprovedTicket();
-        return Results.Created($"/ticket/{DBt.RequestID}", DBt);
+            if (DBt != null) return Results.Created($"/ticket/{DBt.RequestID}", DBt);
+            else return Results.BadRequest();
         default:
             return Results.Unauthorized();
     }
     
 });
 
-// For the employee to edit a ticket, or manager to approve it
+
+// For the employee to edit a ticket, or manager to approve it.
+// The user needs to have a call to get this ticket before making this api call.
 app.MapPost("/ticket/{id}", (int id, Ticket t) =>
 {
     //Console.WriteLine(t);
